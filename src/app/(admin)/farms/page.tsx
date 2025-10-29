@@ -2,8 +2,8 @@ import FarmList from '@/components/farms/FarmList';
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Farms | FarmOrbit - Farm Management Dashboard',
-  description: 'Manage your farm portfolio with FarmOrbit',
+  title: 'Farms | CarTribeit - Farm Management Dashboard',
+  description: 'Manage your farm portfolio with CarTribeit',
 };
 
 export default function FarmsPage() {

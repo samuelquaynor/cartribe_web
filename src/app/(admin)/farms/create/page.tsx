@@ -2,7 +2,7 @@ import FarmForm from '@/components/farms/FarmForm';
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Create Farm | FarmOrbit - Farm Management Dashboard',
+  title: 'Create Farm | CarTribeit - Farm Management Dashboard',
   description: 'Create a new farm in your portfolio',
 };
 

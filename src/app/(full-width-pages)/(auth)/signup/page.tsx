@@ -2,8 +2,8 @@ import SignUpForm from "@/components/auth/SignUpForm";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Next.js SignUp Page | FarmOrbit - Next.js Dashboard Template",
-  description: "This is Next.js SignUp Page FarmOrbit Dashboard Template",
+  title: "Next.js SignUp Page | CarTribeit - Next.js Dashboard Template",
+  description: "This is Next.js SignUp Page CarTribeit Dashboard Template",
   // other metadata
 };
 
