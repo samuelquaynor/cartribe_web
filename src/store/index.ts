@@ -1,12 +1,16 @@
 import { configureStore } from '@reduxjs/toolkit';
 import authReducer from './slices/authSlice';
 import farmReducer from './slices/farmSlice';
+import animalReducer from './slices/animalSlice';
+import farmMemberReducer from './slices/farmMemberSlice';
 
 // Configure the Redux store
 export const store = configureStore({
     reducer: {
         auth: authReducer,
         farms: farmReducer,
+        animals: animalReducer,
+        farmMembers: farmMemberReducer,
     },
     middleware: (getDefaultMiddleware) =>
         getDefaultMiddleware({

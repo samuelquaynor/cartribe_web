@@ -1,19 +1,19 @@
 import Calendar from "@/components/calendar/Calendar";
 import PageBreadcrumb from "@/components/common/PageBreadCrumb";
 import { Metadata } from "next";
-import React from "react";
+import React, { Suspense } from "react";
 
 export const metadata: Metadata = {
-  title: "Next.js Calender | CarTribeit - Next.js Dashboard Template",
-  description:
-    "This is Next.js Calender page for CarTribeit  Tailwind CSS Admin Dashboard Template",
-  // other metadata
+  title: "Calendar | FarmOrbit - Farm Management Platform",
+  description: "View and manage your farm events and schedule with FarmOrbit calendar",
 };
 export default function page() {
   return (
     <div>
       <PageBreadcrumb pageTitle="Calendar" />
-      <Calendar />
+      <Suspense fallback={<div>Loading calendar...</div>}>
+        <Calendar />
+      </Suspense>
     </div>
   );
 }

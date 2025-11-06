@@ -2,12 +2,11 @@ import BarChartOne from "@/components/charts/bar/BarChartOne";
 import ComponentCard from "@/components/common/ComponentCard";
 import PageBreadcrumb from "@/components/common/PageBreadCrumb";
 import { Metadata } from "next";
-import React from "react";
+import React, { Suspense } from "react";
 
 export const metadata: Metadata = {
-  title: "Next.js Bar Chart | CarTribeit - Next.js Dashboard Template",
-  description:
-    "This is Next.js Bar Chart page for CarTribeit - Next.js Tailwind CSS Admin Dashboard Template",
+  title: "Bar Chart | FarmOrbit - Farm Management Platform",
+  description: "View farm data and statistics with bar charts in FarmOrbit",
 };
 
 export default function page() {
@@ -16,7 +15,9 @@ export default function page() {
       <PageBreadcrumb pageTitle="Bar Chart" />
       <div className="space-y-6">
         <ComponentCard title="Bar Chart 1">
-          <BarChartOne />
+          <Suspense fallback={<div>Loading chart...</div>}>
+            <BarChartOne />
+          </Suspense>
         </ComponentCard>
       </div>
     </div>

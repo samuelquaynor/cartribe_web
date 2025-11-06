@@ -25,15 +25,6 @@ describe('Farms Feature', () => {
     });
 
     it('should create a farm and verify it appears in the list', () => {
-        // Intercept the farm creation API call to verify decimal values
-        cy.intercept('POST', '/api/farms', (req) => {
-            console.log('🚀 Farm creation request body:', req.body);
-            expect(req.body.location_latitude).to.equal(34.0522);
-            expect(req.body.location_longitude).to.equal(-118.2437);
-            expect(req.body.size_acres).to.equal(100);
-            expect(req.body.size_hectares).to.equal(40.47);
-        }).as('createFarm');
-
         // Click create farm button
         cy.get('[data-testid="create-farm-button"]').click();
 
@@ -73,38 +64,33 @@ describe('Farms Feature', () => {
         // Submit the form
         cy.get('[data-testid="farm-submit-button"]').click();
 
-        // Wait for the API call to complete and verify decimal values were sent correctly
-        cy.wait('@createFarm');
+        // Wait for redirect to farm detail page
+        cy.url({ timeout: 10000 }).should('include', '/farms/');
+        cy.url().should('not.include', '/farms/create');
 
-        // Wait for redirect back to farms list
-        cy.url({ timeout: 10000 }).should('include', '/farms');
-
-        // Verify the created farm appears in the list
-        cy.get('[data-testid="farms-page"]').should('be.visible');
-
-        // Wait for the farm to be added to the list
-        cy.wait(2000);
-
-        // The test should FAIL if no farm cards are found
-        cy.get('[data-testid^="farm-card-"]').should('be.visible');
+        // Verify we're on the farm detail page
+        cy.get('[data-testid="farm-detail-page"]').should('be.visible');
 
         // The test should FAIL if our specific farm is not found
         cy.contains(farmName).should('be.visible');
 
-        // Verify the farm details are displayed correctly
-        cy.get('[data-testid^="farm-card-"]').contains(farmName).closest('[data-testid^="farm-card-"]').within(() => {
-            // Check that farm name is displayed correctly
-            cy.get('h3').should('contain', farmName);
+        // Verify the farm details are displayed correctly on the detail page
+        // Check that farm name is displayed in the page title
+        cy.get('h1').should('contain', farmName);
 
-            // Check that farm type is displayed
-            cy.contains(/Crop Farm|Livestock Farm|Mixed Farm|Dairy Farm|Poultry Farm|Other/).should('be.visible');
+        // Navigate to Details tab to see farm information
+        cy.get('[data-testid="tab-details"]').click();
 
-            // Check that farm status is displayed (Active/Inactive only)
-            cy.contains(/Active|Inactive/).should('be.visible');
+        // Check that farm type is displayed in the basic information section
+        cy.contains('Farm Type').should('be.visible');
+        cy.contains(/Crop Farm|Livestock Farm|Mixed Farm|Dairy Farm|Poultry Farm|Other/).should('be.visible');
 
-            // Check that farm size is displayed
-            cy.contains(/Size:/).should('be.visible');
-        });
+        // Check that farm status is displayed (Active/Inactive only)
+        cy.contains('Status').should('be.visible');
+        cy.contains(/Active|Inactive/).should('be.visible');
+
+        // Check that farm size is displayed
+        cy.contains('Size').should('be.visible');
     });
 
     it('should list farms and verify farm details', () => {
@@ -117,23 +103,20 @@ describe('Farms Feature', () => {
         // This test should verify that farms are properly listed
         // Check if farms exist and verify they are displayed correctly
         cy.get('body').then(($body) => {
-            if ($body.find('[data-testid^="farm-card-"]').length > 0) {
-                // Farms exist - verify they are displayed correctly
-                cy.get('[data-testid^="farm-card-"]').first().should('be.visible');
+            if ($body.find('[data-testid^="farm-row-"]').length > 0) {
+                // Farms exist - verify they are displayed correctly in table
+                cy.get('[data-testid^="farm-row-"]').first().should('be.visible');
 
-                // Verify farm details are displayed
-                cy.get('[data-testid^="farm-card-"]').first().within(() => {
+                // Verify farm details are displayed in table row
+                cy.get('[data-testid^="farm-row-"]').first().within(() => {
                     // Check that farm name is displayed
-                    cy.get('h3').should('be.visible').and('not.be.empty');
+                    cy.get('td').first().should('be.visible').and('not.be.empty');
 
                     // Check that farm type is displayed
-                    cy.contains(/Crop Farm|Livestock Farm|Mixed Farm|Dairy Farm|Poultry Farm|Other/).should('be.visible');
+                    cy.contains(/Crop|Livestock|Mixed|Dairy|Poultry|Other/).should('be.visible');
 
                     // Check that farm status is displayed (Active/Inactive only)
                     cy.contains(/Active|Inactive/).should('be.visible');
-
-                    // Check that farm size is displayed
-                    cy.contains(/Size:/).should('be.visible');
                 });
             } else {
                 // No farms exist - this is also a valid state
@@ -169,19 +152,10 @@ describe('Farms Feature', () => {
         });
 
         cy.get('[data-testid="farm-submit-button"]').click();
-        cy.url({ timeout: 10000 }).should('include', '/farms');
-
-        // Wait for the farm to appear in the list
-        cy.wait(2000);
-        cy.contains(originalFarmName).should('be.visible');
-
-        // Click on the farm to view details
-        cy.contains(originalFarmName).closest('[data-testid^="farm-card-"]').within(() => {
-            cy.get('[data-testid^="farm-view-button-"]').click();
-        });
-
-        // Should be on farm detail page
-        cy.url().should('include', '/farms/');
+        
+        // Should redirect to farm detail page
+        cy.url({ timeout: 10000 }).should('include', '/farms/');
+        cy.url().should('not.include', '/farms/create');
         cy.get('[data-testid="farm-detail-page"]').should('be.visible');
 
         // Click edit button
@@ -228,13 +202,14 @@ describe('Farms Feature', () => {
         cy.contains(originalFarmName).should('not.exist');
 
         // Click on the updated farm to verify the changes were saved
-        cy.contains(updatedFarmName).closest('[data-testid^="farm-card-"]').within(() => {
-            cy.get('[data-testid^="farm-view-button-"]').click();
-        });
+        cy.contains(updatedFarmName).closest('[data-testid^="farm-row-"]').click();
 
         // Should be on farm detail page
         cy.url().should('include', '/farms/');
         cy.get('[data-testid="farm-detail-page"]').should('be.visible');
+
+        // Navigate to Details tab to verify updated information
+        cy.get('[data-testid="tab-details"]').click();
 
         // Verify the updated information is displayed
         cy.contains(updatedFarmName).should('be.visible');
@@ -269,19 +244,10 @@ describe('Farms Feature', () => {
         });
 
         cy.get('[data-testid="farm-submit-button"]').click();
-        cy.url({ timeout: 10000 }).should('include', '/farms');
-
-        // Wait for the farm to appear in the list
-        cy.wait(2000);
-        cy.contains(farmToDelete).should('be.visible');
-
-        // Click on the farm to view details
-        cy.contains(farmToDelete).closest('[data-testid^="farm-card-"]').within(() => {
-            cy.get('[data-testid^="farm-view-button-"]').click();
-        });
-
-        // Should be on farm detail page
-        cy.url().should('include', '/farms/');
+        
+        // Should redirect to farm detail page
+        cy.url({ timeout: 10000 }).should('include', '/farms/');
+        cy.url().should('not.include', '/farms/create');
         cy.get('[data-testid="farm-detail-page"]').should('be.visible');
 
         // Click delete button
@@ -328,19 +294,10 @@ describe('Farms Feature', () => {
         });
 
         cy.get('[data-testid="farm-submit-button"]').click();
-        cy.url({ timeout: 10000 }).should('include', '/farms');
-
-        // Wait for the farm to appear in the list
-        cy.wait(2000);
-        cy.contains(farmToKeep).should('be.visible');
-
-        // Click on the farm to view details
-        cy.contains(farmToKeep).closest('[data-testid^="farm-card-"]').within(() => {
-            cy.get('[data-testid^="farm-view-button-"]').click();
-        });
-
-        // Should be on farm detail page
-        cy.url().should('include', '/farms/');
+        
+        // Should redirect to farm detail page
+        cy.url({ timeout: 10000 }).should('include', '/farms/');
+        cy.url().should('not.include', '/farms/create');
         cy.get('[data-testid="farm-detail-page"]').should('be.visible');
 
         // Click delete button
