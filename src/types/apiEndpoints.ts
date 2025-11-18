@@ -1,9 +1,9 @@
 // API Endpoints Documentation
-// Based on Swagger docs at http://localhost:8080/swagger/index.html
+// Based on Swagger docs at http://localhost:7070/swagger/index.html
 
 /**
  * Authentication Endpoints
- * Base URL: http://localhost:8080/api
+ * Base URL: http://localhost:7070/api
  */
 
 // POST /auth/login

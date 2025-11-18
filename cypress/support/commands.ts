@@ -89,6 +89,37 @@ declare global {
              * @example cy.getFarmIdFromUrl()
              */
             getFarmIdFromUrl(): Chainable<string>;
+            /**
+             * Custom command to navigate to vehicles page
+             */
+            navigateToVehicles(): Chainable<void>;
+            /**
+             * Custom command to create a vehicle via the UI
+             */
+            createVehicle(data?: Partial<{
+                make: string;
+                model: string;
+                year: number;
+                color?: string;
+                seats: number;
+                vin?: string;
+                licensePlate?: string;
+                transmission: 'automatic' | 'manual' | 'semi-automatic';
+                fuelType: 'petrol' | 'diesel' | 'electric' | 'hybrid';
+                pricePerDay: number;
+                description?: string;
+                address?: string;
+                latitude?: number;
+                longitude?: number;
+            }>): Chainable<string>;
+            /**
+             * Custom command to navigate to bookings page
+             */
+            navigateToBookings(): Chainable<void>;
+            /**
+             * Custom command to create a booking via API request
+             */
+            createBooking(vehicleId: string, overrides?: Partial<{ startDate: string; endDate: string; message?: string }>): Chainable<string>;
         }
     }
 }
@@ -141,7 +172,7 @@ Cypress.Commands.add('verifyFarmsPresent', (farmNames: string[]) => {
     // Should be on farms page
     cy.url().should('include', '/farms');
     cy.contains('Farms').should('be.visible');
-    
+
     // Verify each farm name is present
     farmNames.forEach(farmName => {
         cy.contains(farmName).should('be.visible');
@@ -176,7 +207,7 @@ Cypress.Commands.add('waitForApi', (method: string, url: string) => {
 Cypress.Commands.add('signup', (email: string, password: string) => {
     // Intercept the signup API call
     cy.intercept('POST', '**/auth/register').as('signupRequest');
-    
+
     cy.visit('/signup');
     cy.get('h1').should('contain', 'Sign Up');
 
@@ -241,14 +272,14 @@ Cypress.Commands.add('createFarm', (name: string, description: string, type: str
     cy.get('[data-testid="farm-name-input"]').type(name);
     cy.get('[data-testid="farm-description-input"]').type(description);
     cy.get('[data-testid="farm-type-select"]').select(type);
-    
+
     // Fill in location fields with provided values or defaults
     const farmAddress = address || '123 Farm Road, Farm City, Farm State, Farm Country';
     const farmLat = lat || 34.0522;
     const farmLng = lng || -118.2437;
     const farmAcres = acres || 100;
     const farmHectares = hectares || 40.47;
-    
+
     cy.get('[data-testid="farm-location-address-input"]').type(farmAddress);
     cy.get('[data-testid="farm-latitude-input"]').then(($input) => {
         ($input[0] as HTMLInputElement).valueAsNumber = farmLat;
@@ -266,10 +297,10 @@ Cypress.Commands.add('createFarm', (name: string, description: string, type: str
         ($input[0] as HTMLInputElement).valueAsNumber = farmHectares;
         cy.wrap($input).trigger('input');
     });
-    
+
     // Wait a moment for form state to update
     cy.wait(500);
-    
+
     cy.get('[data-testid="farm-submit-button"]').click();
 
     // Wait for farm to be created and redirected to farm detail page
@@ -300,6 +331,134 @@ Cypress.Commands.add('getFarmIdFromUrl', () => {
         const urlParts = url.split('/');
         const farmId = urlParts[urlParts.length - 1];
         return farmId;
+    });
+});
+
+Cypress.Commands.add('navigateToVehicles', () => {
+    cy.get('[data-testid="my-vehicles-sidebar-button"]').click();
+    cy.url().should('include', '/vehicles');
+    cy.get('[data-testid="vehicles-page"]').should('be.visible');
+});
+
+Cypress.Commands.add('createVehicle', (data = {}) => {
+    const defaults = {
+        make: `Test Make ${Date.now()}`,
+        model: 'Model X',
+        year: new Date().getFullYear(),
+        color: 'Silver',
+        seats: 5,
+        vin: '1HGBH41JXMN109186',
+        licensePlate: `ABC-${Math.floor(Math.random() * 9000 + 1000)}`,
+        transmission: 'automatic' as const,
+        fuelType: 'petrol' as const,
+        pricePerDay: 75,
+        description: 'Well maintained vehicle built for Cypress tests',
+        address: '123 Main Street, Test City',
+        latitude: 37.7749,
+        longitude: -122.4194,
+    };
+
+    const vehicleData = { ...defaults, ...data };
+
+    // Ensure we're on the vehicles page before clicking create
+    cy.get('[data-testid="my-vehicles-sidebar-button"]').click();
+    cy.url().should('include', '/vehicles');
+    cy.get('[data-testid="vehicles-page"]').should('be.visible');
+
+    cy.get('[data-testid="create-vehicle-button"]').click();
+
+    cy.get('[data-testid="vehicle-make-input"]').clear().type(vehicleData.make);
+    cy.get('[data-testid="vehicle-model-input"]').clear().type(vehicleData.model);
+    cy.get('[data-testid="vehicle-year-input"]').then(($input) => {
+        ($input[0] as HTMLInputElement).valueAsNumber = vehicleData.year;
+        cy.wrap($input).trigger('input');
+    });
+    cy.get('[data-testid="vehicle-color-input"]').clear().type(vehicleData.color || '');
+    cy.get('[data-testid="vehicle-seats-input"]').then(($input) => {
+        ($input[0] as HTMLInputElement).valueAsNumber = vehicleData.seats;
+        cy.wrap($input).trigger('input');
+    });
+
+    if (vehicleData.vin) {
+        cy.get('[data-testid="vehicle-vin-input"]').clear().type(vehicleData.vin);
+    }
+    if (vehicleData.licensePlate) {
+        cy.get('[data-testid="vehicle-license-plate-input"]').clear().type(vehicleData.licensePlate);
+    }
+
+    cy.get('[data-testid="vehicle-transmission-select"]').select(vehicleData.transmission);
+    cy.get('[data-testid="vehicle-fuel-type-select"]').select(vehicleData.fuelType);
+    cy.get('[data-testid="vehicle-price-per-day-input"]').then(($input) => {
+        ($input[0] as HTMLInputElement).valueAsNumber = vehicleData.pricePerDay;
+        cy.wrap($input).trigger('input');
+    });
+    cy.get('[data-testid="vehicle-description-input"]').clear().type(vehicleData.description || '');
+
+    cy.get('[data-testid="vehicle-location-address-input"]').clear().type(vehicleData.address || '');
+    cy.get('[data-testid="vehicle-latitude-input"]').then(($input) => {
+        ($input[0] as HTMLInputElement).valueAsNumber = vehicleData.latitude ?? 0;
+        cy.wrap($input).trigger('input');
+    });
+    cy.get('[data-testid="vehicle-longitude-input"]').then(($input) => {
+        ($input[0] as HTMLInputElement).valueAsNumber = vehicleData.longitude ?? 0;
+        cy.wrap($input).trigger('input');
+    });
+
+    // Upload default vehicle image
+    cy.get('[data-testid="image-upload-input"]').selectFile('cypress/fixtures/vehicle-default.png', { force: true });
+    cy.wait(2000); // Wait for image upload to complete
+
+    cy.get('[data-testid="vehicle-submit-button"]').scrollIntoView().should('be.visible').click();
+
+    cy.url({ timeout: 10000 }).should('include', '/vehicles/');
+    cy.get('[data-testid="vehicle-detail-page"]').should('be.visible');
+
+    return cy.url().then((url) => {
+        const parts = url.split('/');
+        const vehicleId = parts[parts.length - 1];
+        return vehicleId;
+    });
+});
+
+Cypress.Commands.add('navigateToBookings', () => {
+    // Click the bookings menu to expand it
+    cy.get('[data-testid="bookings-sidebar-button"]').click();
+    // Wait for the submenu to expand
+    cy.wait(300);
+    // Click on "My Bookings" submenu item
+    cy.get('[data-testid="my-bookings-sidebar-button"]').should('be.visible').click();
+    cy.url().should('include', '/bookings');
+    cy.get('[data-testid="bookings-page-container"]').should('be.visible');
+});
+
+Cypress.Commands.add('createBooking', (vehicleId: string, overrides = {}) => {
+    const startDate = overrides.startDate || new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+    const endDate = overrides.endDate || new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString();
+    const message = overrides.message || 'Booking created by Cypress test';
+
+    return cy.getCookie('access_token').then((cookie) => {
+        const token = cookie?.value;
+        expect(token, 'access token').to.be.a('string');
+
+        return cy.request({
+            method: 'POST',
+            url: `${Cypress.env('API_URL')}/bookings`,
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+            body: {
+                vehicle_id: vehicleId,
+                start_date: startDate,
+                end_date: endDate,
+                message,
+            },
+            failOnStatusCode: false,
+        }).then((response) => {
+            expect(response.status, 'create booking response status').to.eq(200);
+            expect(response.body).to.have.property('data');
+            expect(response.body.data).to.have.property('id');
+            return response.body.data.id as string;
+        });
     });
 });
 

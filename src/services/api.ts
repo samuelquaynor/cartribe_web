@@ -5,7 +5,7 @@ import { ApiResponse, ApiError } from '@/types/api';
 // Create axios instance with default configuration
 const createApiInstance = (): AxiosInstance => {
     const instance = axios.create({
-        baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api',
+        baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:7070/api',
         timeout: parseInt(process.env.NEXT_PUBLIC_API_TIMEOUT || '30000'),
         headers: {
             'Content-Type': 'application/json',
@@ -44,7 +44,7 @@ const createApiInstance = (): AxiosInstance => {
                     const refreshToken = TokenManager.getRefreshToken();
                     if (refreshToken) {
                         const response = await axios.post(
-                            `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api'}/auth/refresh`,
+                            `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:7070/api'}/auth/refresh`,
                             { refreshToken }
                         );
 

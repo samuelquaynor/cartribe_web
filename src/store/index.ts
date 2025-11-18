@@ -3,6 +3,8 @@ import authReducer from './slices/authSlice';
 import farmReducer from './slices/farmSlice';
 import animalReducer from './slices/animalSlice';
 import farmMemberReducer from './slices/farmMemberSlice';
+import vehicleReducer from './slices/vehicleSlice';
+import bookingReducer from './slices/bookingSlice';
 
 // Configure the Redux store
 export const store = configureStore({
@@ -11,6 +13,8 @@ export const store = configureStore({
         farms: farmReducer,
         animals: animalReducer,
         farmMembers: farmMemberReducer,
+        vehicles: vehicleReducer,
+        bookings: bookingReducer,
     },
     middleware: (getDefaultMiddleware) =>
         getDefaultMiddleware({

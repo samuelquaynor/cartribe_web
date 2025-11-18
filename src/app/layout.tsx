@@ -5,6 +5,7 @@ import { SidebarProvider } from '@/context/SidebarContext';
 import { ThemeProvider } from '@/context/ThemeContext';
 import { ReduxProvider } from '@/providers/ReduxProvider';
 import { NotificationProvider } from '@/providers/NotificationProvider';
+import { CurrencyProvider } from '@/contexts/CurrencyContext';
 
 const outfit = Outfit({
   subsets: ["latin"],
@@ -20,11 +21,13 @@ export default function RootLayout({
       <body className={`${outfit.className} dark:bg-gray-900`}>
         <ReduxProvider>
           <ThemeProvider>
-            <SidebarProvider>
-              <NotificationProvider>
-                {children}
-              </NotificationProvider>
-            </SidebarProvider>
+            <CurrencyProvider>
+              <SidebarProvider>
+                <NotificationProvider>
+                  {children}
+                </NotificationProvider>
+              </SidebarProvider>
+            </CurrencyProvider>
           </ThemeProvider>
         </ReduxProvider>
       </body>

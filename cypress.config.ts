@@ -2,7 +2,7 @@ import { defineConfig } from 'cypress';
 
 export default defineConfig({
     e2e: {
-        baseUrl: 'http://localhost:3000',
+        baseUrl: 'http://localhost:4300',
         supportFile: 'cypress/support/e2e.ts',
         specPattern: 'cypress/e2e/**/*.cy.{js,jsx,ts,tsx}',
         viewportWidth: 1280,
@@ -24,7 +24,7 @@ export default defineConfig({
     },
     env: {
         // Environment variables for testing
-        API_URL: 'http://localhost:8080/api',
+        API_URL: 'http://localhost:7070/api',
         TEST_USER_EMAIL: 'test@example.com',
         TEST_USER_PASSWORD: 'TestPassword123!',
     },

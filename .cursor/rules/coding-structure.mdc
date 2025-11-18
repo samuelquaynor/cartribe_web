@@ -19,7 +19,7 @@ This is a Go-based REST API with JWT authentication, PostgreSQL database, and co
 
 ## Project Structure
 ```
-farmorb_api/
+cartribe_api/
 ├── cmd/                    # Application entry points
 │   ├── server/            # Main API server
 │   └── migrate/           # Database migration tool
@@ -194,7 +194,7 @@ make vet            # Run go vet
 ## Environment Variables
 ```bash
 # Server
-SERVER_PORT=8080
+SERVER_PORT=7070
 SERVER_READ_TIMEOUT=30s
 SERVER_WRITE_TIMEOUT=30s
 
@@ -203,7 +203,7 @@ DB_HOST=localhost
 DB_PORT=5432
 DB_USER=postgres
 DB_PASSWORD=password
-DB_NAME=farmorb_api
+DB_NAME=cartribe_api
 DB_SSLMODE=disable
 
 # Authentication

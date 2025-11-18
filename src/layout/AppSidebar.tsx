@@ -22,23 +22,28 @@ type NavItem = {
 const navItems: NavItem[] = [
   {
     icon: <GridIcon />,
-    name: "Dashboard",
+    name: "Home",
     path: "/",
   },
   {
     icon: <BoxIcon />,
-    name: "Farms",
-    path: "/farms",
+    name: "My Vehicles",
+    path: "/vehicles",
+  },
+  {
+    icon: <UserCircleIcon />,
+    name: "Bookings",
+    path: "/bookings",
     subItems: [
       {
-        icon: <BoxIcon />,
-        name: "All Farms",
-        path: "/farms",
+        icon: <UserCircleIcon />,
+        name: "My Bookings",
+        path: "/bookings",
       },
       {
         icon: <UserCircleIcon />,
-        name: "My Invitations",
-        path: "/invitations",
+        name: "Pending Requests",
+        path: "/bookings/requests",
       },
     ],
   },
@@ -116,12 +121,13 @@ const AppSidebar: React.FC = () => {
                 <span className={`menu-item-text`}>{nav.name}</span>
               )}
               {(isExpanded || isHovered || isMobileOpen) && (
-                <ChevronDownIcon
-                  className={`ml-auto w-5 h-5 transition-transform duration-200  ${openSubmenu?.index === index
-                      ? "rotate-180 text-brand-500"
-                      : ""
-                    }`}
-                />
+                <span
+                  className={`ml-auto w-5 h-5 transition-transform duration-200 flex items-center justify-center ${
+                    openSubmenu?.index === index ? 'rotate-180 text-brand-500' : ''
+                  }`}
+                >
+                  <ChevronDownIcon />
+                </span>
               )}
             </button>
           ) : (
@@ -248,14 +254,14 @@ const AppSidebar: React.FC = () => {
             <>
               <Image
                 className="dark:hidden"
-                src="/images/logo/farmorblogo.png"
+                src="/images/logo/cartribelogo.png"
                 alt="Logo"
                 width={154}
                 height={32}
               />
               <Image
                 className="hidden dark:block"
-                src="/images/logo/farmorblogo.png"
+                src="/images/logo/cartribelogo.png"
                 alt="Logo"
                 width={154}
                 height={32}
@@ -263,7 +269,7 @@ const AppSidebar: React.FC = () => {
             </>
           ) : (
             <Image
-              src="/images/logo/farmorblogo.png"
+              src="/images/logo/cartribelogo.png"
               alt="Logo"
               width={32}
               height={32}
