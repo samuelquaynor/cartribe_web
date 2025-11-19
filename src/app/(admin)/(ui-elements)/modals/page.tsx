@@ -8,8 +8,8 @@ import { Metadata } from "next";
 import React from "react";
 
 export const metadata: Metadata = {
-  title: "Modals | FarmOrbit - Farm Management Platform",
-  description: "View modal component examples and usage in FarmOrbit",
+  title: "Modals | CarTribe - Car Sharing Platform",
+  description: "View modal component examples and usage in CarTribe",
 };
 
 export default function Modals() {

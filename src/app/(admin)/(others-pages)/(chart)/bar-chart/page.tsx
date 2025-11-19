@@ -5,8 +5,8 @@ import { Metadata } from "next";
 import React, { Suspense } from "react";
 
 export const metadata: Metadata = {
-  title: "Bar Chart | FarmOrbit - Farm Management Platform",
-  description: "View farm data and statistics with bar charts in FarmOrbit",
+  title: "Bar Chart | CarTribe - Car Sharing Platform",
+  description: "View vehicle data and statistics with bar charts in CarTribe",
 };
 
 export default function page() {

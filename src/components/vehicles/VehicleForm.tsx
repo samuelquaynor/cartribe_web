@@ -176,20 +176,20 @@ export default function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFor
   };
 
   return (
-    <div className="w-full p-6">
-      <div className="mb-6">
-        <h1 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">
+    <div className="w-full">
+      <div className="mb-4">
+        <h1 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
           {vehicle ? 'Edit Vehicle' : 'Create New Vehicle'}
         </h1>
-        <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
+        <p className="text-sm text-gray-600 dark:text-gray-400">
           {vehicle ? 'Update your vehicle information' : 'List a new vehicle for rental'}
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-4">
         {/* Error Display */}
         {(error || validationErrors.length > 0) && (
-          <div className="p-4 bg-red-50 border border-red-200 rounded-lg dark:bg-red-900/20 dark:border-red-800">
+          <div className="p-3 bg-red-50 border border-red-200 rounded-lg dark:bg-red-900/20 dark:border-red-800">
             {error && (
               <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
             )}
@@ -204,10 +204,10 @@ export default function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFor
         )}
 
         {/* Basic Information */}
-        <div className="space-y-4">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Basic Information</h2>
+        <div className="space-y-3">
+          <h2 className="text-base font-semibold text-gray-900 dark:text-white mb-3">Basic Information</h2>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div>
               <Label>
                 Make <span className="text-error-500">*</span>
@@ -235,7 +235,7 @@ export default function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFor
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <div>
               <Label>
                 Year <span className="text-error-500">*</span>
@@ -275,7 +275,7 @@ export default function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFor
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div>
               <Label>VIN</Label>
               <Input
@@ -300,7 +300,7 @@ export default function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFor
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div>
               <Label>
                 Transmission <span className="text-error-500">*</span>
@@ -386,9 +386,9 @@ export default function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFor
         </div>
 
         {/* Vehicle Photos */}
-        <div className="space-y-4">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Vehicle Photos</h2>
-          <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+        <div className="space-y-3">
+          <h2 className="text-base font-semibold text-gray-900 dark:text-white mb-3">Vehicle Photos</h2>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
             Upload photos of your vehicle. You can upload up to 10 images.
           </p>
           <ImageUpload
@@ -400,8 +400,8 @@ export default function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFor
         </div>
 
         {/* Location Information */}
-        <div className="space-y-4">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Location Information</h2>
+        <div className="space-y-3">
+          <h2 className="text-base font-semibold text-gray-900 dark:text-white mb-3">Location Information</h2>
           
           <div>
             <Label>Location Address</Label>
@@ -414,7 +414,7 @@ export default function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFor
             />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div>
               <Label>Latitude</Label>
               <Input

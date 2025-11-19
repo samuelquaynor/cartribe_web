@@ -7,8 +7,8 @@ import { Metadata } from "next";
 import React from "react";
 
 export const metadata: Metadata = {
-  title: "Images | FarmOrbit - Farm Management Platform",
-  description: "View image component examples and usage in FarmOrbit",
+  title: "Images | CarTribe - Car Sharing Platform",
+  description: "View image component examples and usage in CarTribe",
 };
 
 export default function Images() {

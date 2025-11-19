@@ -5,8 +5,8 @@ import { Metadata } from "next";
 import React from "react";
 
 export const metadata: Metadata = {
-  title: "Tables | FarmOrbit - Farm Management Platform",
-  description: "View and manage farm data in tables on FarmOrbit",
+  title: "Tables | CarTribe - Car Sharing Platform",
+  description: "View and manage vehicle data in tables on CarTribe",
 };
 
 export default function BasicTables() {

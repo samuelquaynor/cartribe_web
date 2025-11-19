@@ -3,8 +3,8 @@ import { Metadata } from "next";
 import React from "react";
 
 export const metadata: Metadata = {
-  title: "Blank Page | FarmOrbit - Farm Management Platform",
-  description: "Blank page template in FarmOrbit",
+  title: "Blank Page | CarTribe - Car Sharing Platform",
+  description: "Blank page template in CarTribe",
 };
 
 export default function BlankPage() {

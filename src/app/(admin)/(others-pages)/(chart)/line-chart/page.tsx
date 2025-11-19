@@ -5,8 +5,8 @@ import { Metadata } from "next";
 import React from "react";
 
 export const metadata: Metadata = {
-  title: "Line Chart | FarmOrbit - Farm Management Platform",
-  description: "View farm data trends with line charts in FarmOrbit",
+  title: "Line Chart | CarTribe - Car Sharing Platform",
+  description: "View vehicle data trends with line charts in CarTribe",
 };
 export default function LineChart() {
   return (

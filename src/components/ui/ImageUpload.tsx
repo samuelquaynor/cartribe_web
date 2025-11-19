@@ -109,11 +109,11 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       {/* Upload Area */}
       {images.length < maxImages && (
         <div
-          className={`border-2 border-dashed rounded-lg p-6 text-center ${
+          className={`border-2 border-dashed rounded-lg p-3 text-center md:max-w-md ${
             disabled
               ? 'border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 cursor-not-allowed'
               : 'border-gray-300 dark:border-gray-600 hover:border-blue-400 dark:hover:border-blue-500 cursor-pointer'
@@ -133,9 +133,9 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
             data-testid="image-upload-input"
           />
 
-          <div className="space-y-2">
+          <div className="flex items-center justify-center gap-3">
             <svg
-              className="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500"
+              className="h-8 w-8 text-gray-400 dark:text-gray-500"
               stroke="currentColor"
               fill="none"
               viewBox="0 0 48 48"
@@ -148,19 +148,18 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
                 strokeLinejoin="round"
               />
             </svg>
-            <div className="text-sm text-gray-600 dark:text-gray-400">
-              <span className="font-medium text-blue-600 dark:text-blue-400">Click to upload</span> or drag and drop
+            <div className="text-left">
+              <div className="text-sm text-gray-600 dark:text-gray-400">
+                <span className="font-medium text-blue-600 dark:text-blue-400">Click to upload</span> or drag and drop
+              </div>
+              <p className="text-xs text-gray-500 dark:text-gray-500">
+                PNG, JPG, GIF up to 10MB ({images.length}/{maxImages} images)
+              </p>
             </div>
-            <p className="text-xs text-gray-500 dark:text-gray-500">
-              PNG, JPG, GIF up to 10MB ({images.length}/{maxImages} images)
-            </p>
-          </div>
-
-          {uploading && (
-            <div className="mt-4">
+            {uploading && (
               <div className="text-sm text-gray-600 dark:text-gray-400">Uploading...</div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       )}
 
@@ -173,7 +172,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
 
       {/* Image Preview Grid */}
       {images.length > 0 && (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4" data-testid="image-preview-grid">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3" data-testid="image-preview-grid">
           {images.map((image, index) => (
             <div key={index} className="relative group">
               <div className="aspect-square rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800">

@@ -6,8 +6,8 @@ import { Metadata } from "next";
 import React from "react";
 
 export const metadata: Metadata = {
-  title: "Buttons | FarmOrbit - Farm Management Platform",
-  description: "View button component examples and usage in FarmOrbit",
+  title: "Buttons | CarTribe - Car Sharing Platform",
+  description: "View button component examples and usage in CarTribe",
 };
 
 export default function Buttons() {

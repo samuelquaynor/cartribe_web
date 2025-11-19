@@ -5,8 +5,8 @@ import { Metadata } from "next";
 import React from "react";
 
 export const metadata: Metadata = {
-  title: "Avatars | FarmOrbit - Farm Management Platform",
-  description: "View avatar component examples and usage in FarmOrbit",
+  title: "Avatars | CarTribe - Car Sharing Platform",
+  description: "View avatar component examples and usage in CarTribe",
 };
 
 export default function AvatarPage() {

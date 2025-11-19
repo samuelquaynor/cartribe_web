@@ -5,8 +5,8 @@ import Link from "next/link";
 import React from "react";
 
 export const metadata: Metadata = {
-  title: "Page Not Found | FarmOrbit - Farm Management Platform",
-  description: "The page you're looking for doesn't exist on FarmOrbit",
+  title: "Page Not Found | CarTribe - Car Sharing Platform",
+  description: "The page you're looking for doesn't exist on CarTribe",
 };
 
 export default function Error404() {

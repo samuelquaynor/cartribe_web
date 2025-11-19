@@ -3,8 +3,8 @@ import { Metadata } from "next";
 import { Suspense } from "react";
 
 export const metadata: Metadata = {
-  title: "Sign In | FarmOrbit - Farm Management Platform",
-  description: "Sign in to your FarmOrbit account to manage your farms and livestock",
+  title: "Sign In | CarTribe - Car Sharing Platform",
+  description: "Sign in to your CarTribe account to manage your vehicles and bookings",
 };
 
 export default function SignIn() {

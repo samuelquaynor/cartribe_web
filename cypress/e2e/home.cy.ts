@@ -17,7 +17,7 @@ describe('Home Page', () => {
         cy.signin(userEmail, userPassword);
     });
 
-    it('should display the home page with search filters', () => {
+    it('should display the home page with collapsible search filters', () => {
         cy.get('[data-testid="home-sidebar-button"]').click();
         cy.url().should('eq', Cypress.config().baseUrl + '/');
         cy.get('[data-testid="home-page"]').should('be.visible');
@@ -26,7 +26,13 @@ describe('Home Page', () => {
         cy.contains('Find your drive').should('be.visible');
         cy.contains('Explore the world\'s largest car sharing marketplace').should('be.visible');
 
-        // Check filter inputs
+        // Check that filters are hidden by default
+        cy.get('[data-testid="home-make-input"]').should('not.exist');
+        
+        // Click to show filters
+        cy.get('[data-testid="toggle-filters-button"]').click();
+
+        // Check filter inputs are now visible
         cy.get('[data-testid="home-make-input"]').should('be.visible');
         cy.get('[data-testid="home-model-input"]').should('be.visible');
         cy.get('[data-testid="home-min-price-input"]').should('be.visible');
@@ -35,6 +41,10 @@ describe('Home Page', () => {
         cy.get('[data-testid="home-fuel-type-select"]').should('be.visible');
         cy.get('[data-testid="home-search-button"]').should('be.visible');
         cy.get('[data-testid="home-reset-button"]').should('be.visible');
+        
+        // Click to hide filters
+        cy.get('[data-testid="toggle-filters-button"]').click();
+        cy.get('[data-testid="home-make-input"]').should('not.exist');
     });
 
     it('should display vehicles section', () => {
@@ -48,6 +58,9 @@ describe('Home Page', () => {
     it('should filter vehicles by make', () => {
         cy.get('[data-testid="home-sidebar-button"]').click();
         cy.url().should('eq', Cypress.config().baseUrl + '/');
+
+        // Open filters first
+        cy.get('[data-testid="toggle-filters-button"]').click();
 
         cy.get('[data-testid="home-make-input"]').type('Tesla');
         cy.get('[data-testid="home-search-button"]').click();

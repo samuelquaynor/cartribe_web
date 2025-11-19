@@ -4,8 +4,8 @@ import { Metadata } from "next";
 import React from "react";
 
 export const metadata: Metadata = {
-  title: "Videos | FarmOrbit - Farm Management Platform",
-  description: "View video component examples and usage in FarmOrbit",
+  title: "Videos | CarTribe - Car Sharing Platform",
+  description: "View video component examples and usage in CarTribe",
 };
 
 export default function VideoPage() {

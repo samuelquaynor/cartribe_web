@@ -13,8 +13,8 @@ import { Metadata } from "next";
 import React from "react";
 
 export const metadata: Metadata = {
-  title: "Form Elements | FarmOrbit - Farm Management Platform",
-  description: "View form element components and examples in FarmOrbit",
+  title: "Form Elements | CarTribe - Car Sharing Platform",
+  description: "View form element components and examples in CarTribe",
 };
 
 export default function FormElements() {

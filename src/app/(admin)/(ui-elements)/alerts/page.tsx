@@ -5,8 +5,8 @@ import { Metadata } from "next";
 import React from "react";
 
 export const metadata: Metadata = {
-  title: "Alerts | FarmOrbit - Farm Management Platform",
-  description: "View alert component examples and usage in FarmOrbit",
+  title: "Alerts | CarTribe - Car Sharing Platform",
+  description: "View alert component examples and usage in CarTribe",
 };
 
 export default function Alerts() {

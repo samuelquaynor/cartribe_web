@@ -5,8 +5,8 @@ import { Metadata } from "next";
 import React from "react";
 
 export const metadata: Metadata = {
-  title: "Badges | FarmOrbit - Farm Management Platform",
-  description: "View badge component examples and usage in FarmOrbit",
+  title: "Badges | CarTribe - Car Sharing Platform",
+  description: "View badge component examples and usage in CarTribe",
 };
 
 export default function BadgePage() {
