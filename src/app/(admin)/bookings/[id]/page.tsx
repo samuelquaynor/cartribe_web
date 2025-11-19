@@ -2,9 +2,9 @@ import { Metadata } from 'next';
 import BookingDetail from '@/components/bookings/BookingDetail';
 
 type BookingDetailPageProps = {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 };
 
 export const metadata: Metadata = {
@@ -12,8 +12,8 @@ export const metadata: Metadata = {
   description: 'View and manage an individual booking.',
 };
 
-export default function BookingDetailPage({ params }: BookingDetailPageProps) {
-  const { id } = params;
+export default async function BookingDetailPage({ params }: BookingDetailPageProps) {
+  const { id } = await params;
 
   return (
     <div className="p-6">
