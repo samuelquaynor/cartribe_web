@@ -99,10 +99,10 @@ export default function BookingDetail({ bookingId }: BookingDetailProps) {
   const actionButtons = useMemo(() => {
     if (!booking) return [];
 
-    const actions: { label: string; status: UpdateBookingStatusData['status']; variant?: 'default' | 'outline' }[] = [];
+    const actions: { label: string; status: UpdateBookingStatusData['status']; variant?: 'primary' | 'outline' }[] = [];
 
     if (booking.status === 'pending') {
-      actions.push({ label: 'Accept Booking', status: 'accepted', variant: 'default' });
+      actions.push({ label: 'Accept Booking', status: 'accepted', variant: 'primary' });
       actions.push({ label: 'Reject Booking', status: 'rejected', variant: 'outline' });
     }
 
@@ -276,7 +276,7 @@ export default function BookingDetail({ bookingId }: BookingDetailProps) {
                 {actionButtons.map((action) => (
                   <Button
                     key={action.status}
-                    variant={action.variant || 'default'}
+                    variant={action.variant || 'primary'}
                     onClick={() => handleStatusChange(action.status)}
                     disabled={isUpdating}
                     className="w-full"
