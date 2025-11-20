@@ -3,8 +3,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useVehicles } from '@/hooks/useVehicles';
+import { useAuth } from '@/hooks/useAuth';
 import { Vehicle } from '@/types/vehicle';
 import VehicleForm from '@/components/vehicles/VehicleForm';
+import BookingForm from '@/components/bookings/BookingForm';
 import Button from '@/components/ui/button/Button';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { formatCurrency } from '@/utils/currency';
@@ -23,25 +25,39 @@ export default function VehicleDetail({ vehicleId }: VehicleDetailProps) {
     clearError,
     removeVehicle,
   } = useVehicles();
+  const { userId, user, fetchCurrentUser, isLoading: authLoading } = useAuth();
   const { currency } = useCurrency();
 
   const [isEditing, setIsEditing] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [selectedImageIndex, setSelectedImageIndex] = useState<number>(0);
+  const [bookingSuccess, setBookingSuccess] = useState(false);
 
   useEffect(() => {
     if (vehicleId) {
       getVehicleById(vehicleId);
     }
-  }, [vehicleId, getVehicleById]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [vehicleId]);
+
+  // Ensure user is loaded for ownership check
+  useEffect(() => {
+    // Always fetch user if not loaded, even if authLoading is true
+    // This ensures we have the latest user data for ownership checks
+    if (!user && fetchCurrentUser) {
+      fetchCurrentUser();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
 
   useEffect(() => {
     return () => {
       clearError();
       setDeleteError(null);
     };
-  }, [clearError]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const vehicle: Vehicle | null = useMemo(() => {
     if (currentVehicle && currentVehicle.id === vehicleId) {
@@ -49,6 +65,14 @@ export default function VehicleDetail({ vehicleId }: VehicleDetailProps) {
     }
     return null;
   }, [currentVehicle, vehicleId]);
+
+  const isOwner = useMemo(() => {
+    // Only check ownership if we have both vehicle and user data, and auth is not loading
+    if (!vehicle || !userId || authLoading) {
+      return false;
+    }
+    return vehicle.owner_id === userId;
+  }, [vehicle, userId, authLoading]);
 
   const handleToggleEdit = () => {
     setIsEditing((prev) => !prev);
@@ -74,6 +98,13 @@ export default function VehicleDetail({ vehicleId }: VehicleDetailProps) {
   const handleEditSuccess = () => {
     getVehicleById(vehicleId);
     setIsEditing(false);
+  };
+
+  const handleBookingSuccess = () => {
+    setBookingSuccess(true);
+    setTimeout(() => {
+      router.push('/bookings');
+    }, 2000);
   };
 
   if (isLoading && !vehicle) {
@@ -121,47 +152,52 @@ export default function VehicleDetail({ vehicleId }: VehicleDetailProps) {
                 Back to search
               </button>
 
-              {/* Main Image */}
-              {vehicle.image_urls && vehicle.image_urls.length > 0 ? (
-                <div className="aspect-[21/9] w-full bg-gray-200 dark:bg-gray-800 rounded-2xl overflow-hidden">
-                  <img
-                    src={vehicle.image_urls[selectedImageIndex]}
-                    alt={`${vehicle.make} ${vehicle.model}`}
-                    className="w-full h-full object-cover"
-                    data-testid="vehicle-main-image"
-                  />
-                </div>
-              ) : (
-                <div className="aspect-[21/9] w-full bg-gray-200 dark:bg-gray-800 rounded-2xl flex items-center justify-center">
-                  <svg className="w-24 h-24 text-gray-400 dark:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
-                </div>
-              )}
+              {/* Main Image and Thumbnails */}
+              <div className="flex gap-4">
+                {/* Thumbnails (Vertical) */}
+                {vehicle.image_urls && vehicle.image_urls.length > 1 && (
+                  <div className="flex flex-col gap-2" data-testid="vehicle-thumbnail-strip">
+                    {vehicle.image_urls.map((url, index) => (
+                      <button
+                        key={index}
+                        onClick={() => setSelectedImageIndex(index)}
+                        className={`flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all ${
+                          selectedImageIndex === index
+                            ? 'border-gray-900 dark:border-white'
+                            : 'border-gray-200 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-500'
+                        }`}
+                        data-testid={`vehicle-thumbnail-${index}`}
+                      >
+                        <img
+                          src={url}
+                          alt={`Thumbnail ${index + 1}`}
+                          className="w-full h-full object-cover"
+                        />
+                      </button>
+                    ))}
+                  </div>
+                )}
 
-              {/* Thumbnail Strip */}
-              {vehicle.image_urls && vehicle.image_urls.length > 1 && (
-                <div className="flex gap-2 mt-4 overflow-x-auto pb-2" data-testid="vehicle-thumbnail-strip">
-                  {vehicle.image_urls.map((url, index) => (
-                    <button
-                      key={index}
-                      onClick={() => setSelectedImageIndex(index)}
-                      className={`flex-shrink-0 w-24 h-16 rounded-lg overflow-hidden border-2 transition-all ${
-                        selectedImageIndex === index
-                          ? 'border-gray-900 dark:border-white'
-                          : 'border-gray-200 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-500'
-                      }`}
-                      data-testid={`vehicle-thumbnail-${index}`}
-                    >
+                {/* Main Image */}
+                <div className="flex-1">
+                  {vehicle.image_urls && vehicle.image_urls.length > 0 ? (
+                    <div className="aspect-[3/1] w-full bg-gray-200 dark:bg-gray-800 rounded-2xl overflow-hidden">
                       <img
-                        src={url}
-                        alt={`Thumbnail ${index + 1}`}
+                        src={vehicle.image_urls[selectedImageIndex]}
+                        alt={`${vehicle.make} ${vehicle.model}`}
                         className="w-full h-full object-cover"
+                        data-testid="vehicle-main-image"
                       />
-                    </button>
-                  ))}
+                    </div>
+                  ) : (
+                    <div className="aspect-[3/1] w-full bg-gray-200 dark:bg-gray-800 rounded-2xl flex items-center justify-center">
+                      <svg className="w-24 h-24 text-gray-400 dark:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                    </div>
+                  )}
                 </div>
-              )}
+              </div>
             </div>
           </div>
 
@@ -279,7 +315,7 @@ export default function VehicleDetail({ vehicleId }: VehicleDetailProps) {
                 </div>
               </div>
 
-              {/* Right Column - Booking Card */}
+              {/* Right Column - Booking Card or Owner Actions */}
               <div className="lg:col-span-1">
                 <div className="sticky top-6">
                   <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl p-6 shadow-lg">
@@ -310,25 +346,43 @@ export default function VehicleDetail({ vehicleId }: VehicleDetailProps) {
                       </span>
                     </div>
 
-                    {/* Action Buttons */}
-                    <div className="space-y-3">
-                      <Button
-                        onClick={handleToggleEdit}
-                        className="w-full"
-                        data-testid="vehicle-edit-button"
-                      >
-                        Edit Vehicle
-                      </Button>
-                      <Button
-                        variant="outline"
-                        onClick={handleDelete}
-                        disabled={isDeleting}
-                        className="w-full"
-                        data-testid="vehicle-delete-button"
-                      >
-                        {isDeleting ? 'Deleting...' : 'Delete Vehicle'}
-                      </Button>
-                    </div>
+                    {/* Owner Actions or Booking Form */}
+                    {isOwner ? (
+                      <div className="space-y-3">
+                        <Button
+                          onClick={handleToggleEdit}
+                          className="w-full"
+                          data-testid="vehicle-edit-button"
+                        >
+                          Edit Vehicle
+                        </Button>
+                        <Button
+                          variant="outline"
+                          onClick={handleDelete}
+                          disabled={isDeleting}
+                          className="w-full"
+                          data-testid="vehicle-delete-button"
+                        >
+                          {isDeleting ? 'Deleting...' : 'Delete Vehicle'}
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="-m-6">
+                        {bookingSuccess ? (
+                          <div className="p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg m-6">
+                            <p className="text-sm text-green-600 dark:text-green-400 text-center">
+                              Booking request sent! Redirecting...
+                            </p>
+                          </div>
+                        ) : (
+                          <BookingForm
+                            vehicleId={vehicleId}
+                            vehicle={vehicle}
+                            onSuccess={handleBookingSuccess}
+                          />
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

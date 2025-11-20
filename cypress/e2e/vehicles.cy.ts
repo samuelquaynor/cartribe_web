@@ -59,16 +59,28 @@ describe('Vehicles Feature', () => {
         cy.contains('Vehicle Photos').should('be.visible');
         cy.get('[data-testid="image-upload-input"]').should('exist');
         cy.get('[data-testid="image-upload-input"]').selectFile('cypress/fixtures/vehicle-default.png', { force: true });
-        cy.wait(2000); // Wait for image upload to complete
+
+        // Wait for image preview to appear (upload completed)
+        cy.get('[data-testid="image-preview-grid"]', { timeout: 10000 }).should('be.visible');
+        cy.get('[data-testid="image-preview-0"]', { timeout: 10000 }).should('be.visible');
+        cy.wait(1000); // Additional wait to ensure upload is fully processed
 
         cy.get('[data-testid="vehicle-submit-button"]').scrollIntoView().should('be.visible').click();
 
         cy.url({ timeout: 10000 }).should('include', '/vehicles/');
         cy.get('[data-testid="vehicle-detail-page"]').should('be.visible');
-        cy.contains(make).should('be.visible');
-        cy.contains(model).should('be.visible');
-        cy.get('[data-testid="vehicle-edit-button"]').should('be.visible');
-        cy.get('[data-testid="vehicle-delete-button"]').should('be.visible');
+
+        // Wait for vehicle data to load (check for vehicle title)
+        cy.contains(make, { timeout: 10000 }).should('be.visible');
+        cy.contains(model, { timeout: 10000 }).should('be.visible');
+
+        // Wait for the right column (price/actions) to load - this ensures the component is fully rendered
+        cy.contains('/day', { timeout: 10000 }).should('be.visible');
+
+        // Wait for user data to load and ownership check to complete
+        cy.wait(3000);
+        cy.get('[data-testid="vehicle-edit-button"]', { timeout: 20000 }).scrollIntoView().should('be.visible');
+        cy.get('[data-testid="vehicle-delete-button"]', { timeout: 20000 }).scrollIntoView().should('be.visible');
     });
 
     it('should edit a vehicle successfully', () => {
@@ -79,7 +91,13 @@ describe('Vehicles Feature', () => {
             const updatedMake = `${baseMake} Updated`;
             const updatedModel = `${baseModel}-2025`;
 
-            cy.get('[data-testid="vehicle-edit-button"]').click();
+            // Wait for vehicle data to load
+            cy.contains(baseMake, { timeout: 10000 }).should('be.visible');
+            // Wait for the right column to load
+            cy.contains('/day', { timeout: 10000 }).should('be.visible');
+            // Wait for user data to load and ownership check to complete
+            cy.wait(3000);
+            cy.get('[data-testid="vehicle-edit-button"]', { timeout: 20000 }).should('be.visible').click();
 
             cy.get('[data-testid="vehicle-make-input"]').clear().type(updatedMake);
             cy.get('[data-testid="vehicle-model-input"]').clear().type(updatedModel);
@@ -116,7 +134,13 @@ describe('Vehicles Feature', () => {
                 return true;
             });
 
-            cy.get('[data-testid="vehicle-delete-button"]').click();
+            // Wait for vehicle data to load
+            cy.contains(deletableMake, { timeout: 10000 }).should('be.visible');
+            // Wait for the right column to load
+            cy.contains('/day', { timeout: 10000 }).should('be.visible');
+            // Wait for user data to load and ownership check to complete
+            cy.wait(3000);
+            cy.get('[data-testid="vehicle-delete-button"]', { timeout: 20000 }).scrollIntoView().should('be.visible').click();
 
             cy.url({ timeout: 10000 }).should('include', '/vehicles');
             cy.get('[data-testid="vehicles-page"]').should('be.visible');
@@ -135,5 +159,54 @@ describe('Vehicles Feature', () => {
         cy.url({ timeout: 10000 }).should('eq', Cypress.config().baseUrl + '/');
         cy.get('[data-testid="home-page"]').should('be.visible');
         cy.contains(browseMake, { timeout: 10000 }).should('be.visible');
+    });
+
+    it('should show booking form for non-owners and edit/delete buttons for owners', () => {
+        const vehicleMake = `Owner Test ${Date.now()}`;
+        const vehicleModel = `Model ${Date.now()}`;
+
+        // Create vehicle as owner
+        cy.createVehicle({ make: vehicleMake, model: vehicleModel }).then((vehicleId) => {
+            // Wait for vehicle data to load
+            cy.contains(vehicleMake, { timeout: 10000 }).should('be.visible');
+            // Wait for the right column to load
+            cy.contains('/day', { timeout: 10000 }).should('be.visible');
+            // Wait for user data to load and ownership check to complete
+            cy.wait(3000);
+
+            // Verify owner sees edit/delete buttons
+            cy.get('[data-testid="vehicle-detail-page"]').should('be.visible');
+            cy.get('[data-testid="vehicle-edit-button"]', { timeout: 20000 }).scrollIntoView().should('be.visible');
+            cy.get('[data-testid="vehicle-delete-button"]', { timeout: 20000 }).scrollIntoView().should('be.visible');
+            cy.get('[data-testid="booking-start-date-input"]').should('not.exist');
+
+            // Logout and create a new user (non-owner)
+            cy.logout();
+            const timestamp = Date.now();
+            const renterEmail = `renter${timestamp}@example.com`;
+            const renterPassword = 'TestPassword123!';
+
+            cy.signup(renterEmail, renterPassword);
+
+            // Wait for signup to complete and user to be loaded
+            cy.wait(2000);
+
+            // Navigate to the vehicle detail page
+            cy.visit(`/vehicles/${vehicleId}`);
+            cy.get('[data-testid="vehicle-detail-page"]', { timeout: 10000 }).should('be.visible');
+
+            // Wait for vehicle data to load
+            cy.contains(vehicleMake, { timeout: 10000 }).should('be.visible');
+            // Wait for the right column to load
+            cy.contains('/day', { timeout: 10000 }).should('be.visible');
+            // Wait for user data to load and ownership check to complete
+            cy.wait(3000);
+
+            // Verify non-owner sees booking form, not edit/delete buttons
+            cy.get('[data-testid="vehicle-edit-button"]').should('not.exist');
+            cy.get('[data-testid="vehicle-delete-button"]').should('not.exist');
+            cy.get('[data-testid="booking-start-date-input"]', { timeout: 20000 }).scrollIntoView().should('be.visible');
+            cy.get('[data-testid="booking-end-date-input"]', { timeout: 20000 }).scrollIntoView().should('be.visible');
+        });
     });
 });

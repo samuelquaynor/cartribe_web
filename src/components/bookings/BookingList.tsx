@@ -3,9 +3,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useBookings } from '@/hooks/useBookings';
-import Button from '@/components/ui/button/Button';
-import CustomMaterialTable from '@/components/ui/table/CustomMaterialTable';
-import { type MRT_ColumnDef } from 'material-react-table';
+import { VehicleService } from '@/services/vehicleService';
 import { Booking } from '@/types/booking';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { formatCurrency } from '@/utils/currency';
@@ -22,6 +20,14 @@ const statusLabels: Record<string, string> = {
   completed: 'Completed',
 };
 
+const statusColors: Record<string, { bg: string; text: string }> = {
+  pending: { bg: 'bg-yellow-100 dark:bg-yellow-900/20', text: 'text-yellow-800 dark:text-yellow-400' },
+  accepted: { bg: 'bg-green-100 dark:bg-green-900/20', text: 'text-green-800 dark:text-green-400' },
+  rejected: { bg: 'bg-red-100 dark:bg-red-900/20', text: 'text-red-800 dark:text-red-400' },
+  cancelled: { bg: 'bg-gray-100 dark:bg-gray-900/20', text: 'text-gray-800 dark:text-gray-400' },
+  completed: { bg: 'bg-blue-100 dark:bg-blue-900/20', text: 'text-blue-800 dark:text-blue-400' },
+};
+
 export default function BookingList({ showPendingRequests = false }: BookingListProps) {
   const router = useRouter();
   const {
@@ -32,9 +38,10 @@ export default function BookingList({ showPendingRequests = false }: BookingList
     getBookings,
     getPendingRequests,
   } = useBookings();
-
   const { currency } = useCurrency();
   const [filterStatus, setFilterStatus] = useState<string>('all');
+  const [vehicleCache, setVehicleCache] = useState<Record<string, any>>({});
+  const [loadingVehicles, setLoadingVehicles] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     if (showPendingRequests) {
@@ -43,6 +50,37 @@ export default function BookingList({ showPendingRequests = false }: BookingList
       getBookings();
     }
   }, [getBookings, getPendingRequests, showPendingRequests]);
+
+  // Fetch vehicle details for bookings
+  useEffect(() => {
+    const dataToShow = showPendingRequests ? pendingRequests : bookings;
+    if (dataToShow && dataToShow.length > 0) {
+      dataToShow.forEach((booking) => {
+        if (!vehicleCache[booking.vehicle_id] && !loadingVehicles.has(booking.vehicle_id)) {
+          setLoadingVehicles((prev) => new Set(prev).add(booking.vehicle_id));
+          VehicleService.getVehicleById(booking.vehicle_id)
+            .then((vehicle) => {
+              if (vehicle) {
+                setVehicleCache((prev) => ({
+                  ...prev,
+                  [booking.vehicle_id]: vehicle,
+                }));
+              }
+            })
+            .catch(() => {
+              // Silently fail - vehicle might not exist
+            })
+            .finally(() => {
+              setLoadingVehicles((prev) => {
+                const next = new Set(prev);
+                next.delete(booking.vehicle_id);
+                return next;
+              });
+            });
+        }
+      });
+    }
+  }, [bookings, pendingRequests, showPendingRequests, vehicleCache, loadingVehicles]);
 
   const dataToShow = showPendingRequests ? pendingRequests : bookings;
 
@@ -53,113 +91,59 @@ export default function BookingList({ showPendingRequests = false }: BookingList
     return dataToShow.filter(booking => booking.status === filterStatus);
   }, [dataToShow, filterStatus]);
 
-  const handleBookingClick = (booking: Booking) => {
-    router.push(`/bookings/${booking.id}`);
-  };
-
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString();
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   };
 
+  const formatShortDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  };
 
-  // Define columns
-  const columns = useMemo<MRT_ColumnDef<Booking>[]>(
-    () => [
-      {
-        accessorKey: 'vehicle_id',
-        header: 'Vehicle ID',
-        size: 200,
-        Cell: ({ cell }) => (
-          <span className="text-sm font-medium text-gray-900 dark:text-white">
-            {cell.getValue<string>()}
-          </span>
-        ),
-      },
-      {
-        accessorKey: 'start_date',
-        header: 'Start Date',
-        size: 120,
-        Cell: ({ cell }) => (
-          <span className="text-sm text-gray-600 dark:text-gray-400">
-            {formatDate(cell.getValue<string>())}
-          </span>
-        ),
-      },
-      {
-        accessorKey: 'end_date',
-        header: 'End Date',
-        size: 120,
-        Cell: ({ cell }) => (
-          <span className="text-sm text-gray-600 dark:text-gray-400">
-            {formatDate(cell.getValue<string>())}
-          </span>
-        ),
-      },
-      {
-        accessorKey: 'total_days',
-        header: 'Days',
-        size: 80,
-        Cell: ({ cell }) => (
-          <span className="text-sm text-gray-600 dark:text-gray-400">
-            {cell.getValue<number>()}
-          </span>
-        ),
-      },
-      {
-        accessorKey: 'total_price',
-        header: 'Total Price',
-        size: 120,
-        Cell: ({ cell }) => (
-          <span className="text-sm font-medium text-gray-900 dark:text-white">
-            {formatCurrency(cell.getValue<number>(), currency)}
-          </span>
-        ),
-      },
-      {
-        accessorKey: 'status',
-        header: 'Status',
-        size: 120,
-        Cell: ({ cell }) => {
-          const status = cell.getValue<string>();
-          const statusColors: Record<string, string> = {
-            pending: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400',
-            accepted: 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400',
-            rejected: 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400',
-            cancelled: 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400',
-            completed: 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400',
-          };
-          return (
-            <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-medium ${statusColors[status] || statusColors.pending}`}>
-              {statusLabels[status] || status}
-            </span>
-          );
-        },
-        filterVariant: 'select',
-        filterSelectOptions: Object.entries(statusLabels).map(([value, label]) => ({
-          value,
-          label,
-        })),
-      },
-    ],
-    []
-  );
+  const handleBookingClick = (bookingId: string) => {
+    router.push(`/bookings/${bookingId}`);
+  };
+
+  if (isLoading && (!dataToShow || dataToShow.length === 0)) {
+    return (
+      <div className="space-y-4" data-testid={showPendingRequests ? "pending-requests-page" : "bookings-page"}>
+        <div className="flex justify-between items-center mb-4">
+          <h1 className="text-xl font-semibold text-gray-900 dark:text-white">
+            {showPendingRequests ? 'Pending Booking Requests' : 'My Bookings'}
+          </h1>
+        </div>
+        <div className="text-center py-12">
+          <p className="text-sm text-gray-600 dark:text-gray-400">Loading bookings...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4" data-testid={showPendingRequests ? "pending-requests-page" : "bookings-page"}>
       {/* Header */}
-      <div className="flex justify-between items-center mb-4">
-        <h1 className="text-xl font-semibold text-gray-900 dark:text-white">
-          {showPendingRequests ? 'Pending Booking Requests' : 'My Bookings'}
-        </h1>
-        {!showPendingRequests && (
-          <Button 
-            onClick={() => router.push('/vehicles/browse')} 
-            data-testid="browse-vehicles-button"
-            size="sm"
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+        <div>
+          <h1 className="text-xl font-semibold text-gray-900 dark:text-white">
+            {showPendingRequests ? 'Pending Booking Requests' : 'My Bookings'}
+          </h1>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+            {filteredBookings.length} {filteredBookings.length === 1 ? 'booking' : 'bookings'}
+          </p>
+        </div>
+        <div className="flex gap-3 items-center">
+          <select
+            value={filterStatus}
+            onChange={(e) => setFilterStatus(e.target.value)}
+            className="px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
-            Browse Vehicles
-          </Button>
-        )}
+            <option value="all">All Status</option>
+            {Object.entries(statusLabels).map(([value, label]) => (
+              <option key={value} value={value}>{label}</option>
+            ))}
+          </select>
+        </div>
       </div>
 
       {error && (
@@ -168,9 +152,9 @@ export default function BookingList({ showPendingRequests = false }: BookingList
         </div>
       )}
 
-      {/* Material React Table */}
-      {!isLoading && (!dataToShow || dataToShow.length === 0) ? (
-        <div className="text-center p-12 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+      {/* Booking Cards */}
+      {!isLoading && (!filteredBookings || filteredBookings.length === 0) ? (
+        <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
           <h3 className="text-lg font-medium text-gray-600 dark:text-gray-400">
             {showPendingRequests ? 'No pending requests' : 'No bookings found'}
           </h3>
@@ -181,27 +165,104 @@ export default function BookingList({ showPendingRequests = false }: BookingList
           </p>
         </div>
       ) : (
-        <CustomMaterialTable
-          columns={columns}
-          data={filteredBookings}
-          isLoading={isLoading}
-          onRowClick={handleBookingClick}
-          getRowId={(row) => row.id}
-          renderTopToolbarCustomActions={() => (
-            <div className="flex gap-2 items-center">
-              <select
-                value={filterStatus}
-                onChange={(e) => setFilterStatus(e.target.value)}
-                className="px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+        <div className="grid grid-cols-1 gap-4">
+          {filteredBookings.map((booking: Booking) => {
+            const vehicle = vehicleCache[booking.vehicle_id];
+            const statusColor = statusColors[booking.status] || statusColors.pending;
+
+            return (
+              <div
+                key={booking.id}
+                onClick={() => handleBookingClick(booking.id)}
+                className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden hover:shadow-lg transition-shadow duration-200 cursor-pointer"
+                data-testid={`booking-card-${booking.id}`}
               >
-                <option value="all">All Status</option>
-                {Object.entries(statusLabels).map(([value, label]) => (
-                  <option key={value} value={value}>{label}</option>
-                ))}
-              </select>
-            </div>
-          )}
-        />
+                <div className="flex flex-col md:flex-row">
+                  {/* Vehicle Image */}
+                  <div className="md:w-64 md:flex-shrink-0">
+                    <div className="aspect-[16/9] md:aspect-square bg-gray-200 dark:bg-gray-700 overflow-hidden">
+                      {vehicle?.image_urls && vehicle.image_urls.length > 0 ? (
+                        <img
+                          src={vehicle.image_urls[0]}
+                          alt={vehicle ? `${vehicle.make} ${vehicle.model}` : 'Vehicle'}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-gray-400 dark:text-gray-600">
+                          <svg className="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Booking Details */}
+                  <div className="flex-1 p-4 md:p-6">
+                    <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+                      <div className="flex-1">
+                        {/* Vehicle Info */}
+                        <div className="mb-3">
+                          {vehicle ? (
+                            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
+                              {vehicle.year} {vehicle.make} {vehicle.model}
+                            </h3>
+                          ) : (
+                            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
+                              Vehicle ID: {booking.vehicle_id.substring(0, 8)}...
+                            </h3>
+                          )}
+                          <p className="text-sm text-gray-600 dark:text-gray-400">
+                            {vehicle?.location_address || 'Location not specified'}
+                          </p>
+                        </div>
+
+                        {/* Trip Dates */}
+                        <div className="flex items-center gap-4 mb-3">
+                          <div className="flex items-center gap-2">
+                            <svg className="w-4 h-4 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                            <span className="text-sm text-gray-600 dark:text-gray-400">
+                              {formatShortDate(booking.start_date)} - {formatShortDate(booking.end_date)}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <svg className="w-4 h-4 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <span className="text-sm text-gray-600 dark:text-gray-400">
+                              {booking.total_days} {booking.total_days === 1 ? 'day' : 'days'}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Status Badge */}
+                        <div className="inline-flex items-center gap-2">
+                          <span className={`inline-flex px-3 py-1 rounded-full text-xs font-medium ${statusColor.bg} ${statusColor.text}`}>
+                            {statusLabels[booking.status] || booking.status}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Price */}
+                      <div className="md:text-right">
+                        <div className="mb-1">
+                          <span className="text-2xl font-bold text-gray-900 dark:text-white">
+                            {formatCurrency(booking.total_price, currency)}
+                          </span>
+                        </div>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          {formatCurrency(booking.price_per_day, currency)}/day
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
       )}
     </div>
   );

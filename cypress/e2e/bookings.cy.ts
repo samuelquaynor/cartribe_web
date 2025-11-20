@@ -43,8 +43,13 @@ describe('Bookings Feature', () => {
         cy.createBooking(vehicleId).then((bookingId) => {
             cy.navigateToBookings();
 
-            cy.contains(vehicleId, { timeout: 10000 }).should('be.visible');
-            cy.contains(vehicleId).click();
+            // Wait for bookings to load
+            cy.get('[data-testid="bookings-page"]', { timeout: 10000 }).should('be.visible');
+            cy.wait(2000); // Wait for vehicle data to load
+
+            // Find the booking card by vehicle make (since we know the make from setup)
+            cy.contains(vehicleMake, { timeout: 10000 }).should('be.visible');
+            cy.contains(vehicleMake).click();
 
             cy.url({ timeout: 10000 }).should('include', `/bookings/${bookingId}`);
             cy.get('[data-testid="booking-detail-page"]').should('be.visible');
@@ -70,8 +75,11 @@ describe('Bookings Feature', () => {
 
             cy.url({ timeout: 10000 }).should('include', '/bookings/requests');
             cy.get('[data-testid="pending-requests-page"]').should('be.visible');
-            cy.contains(vehicleId, { timeout: 10000 }).should('be.visible');
-            cy.contains(vehicleId).click();
+            cy.wait(2000); // Wait for vehicle data to load
+            
+            // Find the booking card by vehicle make
+            cy.contains(vehicleMake, { timeout: 10000 }).should('be.visible');
+            cy.contains(vehicleMake).click();
 
             cy.url({ timeout: 10000 }).should('include', `/bookings/${bookingId}`);
             cy.get('[data-testid="booking-detail-page"]').should('be.visible');

@@ -124,7 +124,7 @@ const AppSidebar: React.FC = () => {
                 <span
                   className={`ml-auto w-5 h-5 transition-transform duration-200 flex items-center justify-center ${
                     openSubmenu?.index === index ? 'rotate-180 text-brand-500' : ''
-                  }`}
+                    }`}
                 >
                   <ChevronDownIcon />
                 </span>

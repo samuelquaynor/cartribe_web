@@ -22,11 +22,11 @@ export default function RootLayout({
         <ReduxProvider>
           <ThemeProvider>
             <CurrencyProvider>
-              <SidebarProvider>
-                <NotificationProvider>
-                  {children}
-                </NotificationProvider>
-              </SidebarProvider>
+            <SidebarProvider>
+              <NotificationProvider>
+                {children}
+              </NotificationProvider>
+            </SidebarProvider>
             </CurrencyProvider>
           </ThemeProvider>
         </ReduxProvider>

@@ -187,8 +187,9 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
                 <button
                   type="button"
                   onClick={() => handleRemoveImage(index)}
-                  className="absolute top-2 right-2 bg-red-600 hover:bg-red-700 text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                  className="absolute top-2 right-2 bg-red-600 hover:bg-red-700 text-white rounded-full p-1.5 shadow-lg transition-all"
                   data-testid={`remove-image-${index}`}
+                  title="Remove image"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

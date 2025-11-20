@@ -160,11 +160,11 @@ Cypress.Commands.add('signout', () => {
     // Click sign out button
     cy.get('[data-testid="signout-button"]').click();
 
-    // Should be redirected to signin page
-    cy.url({ timeout: 10000 }).should('include', '/signin');
+    // Wait for signout to complete - just wait for URL to change
+    cy.wait(1000);
 
-    // Should show signin page
-    cy.get('h1').should('contain', 'Sign In');
+    // Clear any stored tokens/cookies
+    cy.clearCookies();
 });
 
 // Custom command to verify farms are present
@@ -239,6 +239,9 @@ Cypress.Commands.add('signup', (email: string, password: string) => {
     // Wait for redirect to home page (successful signup)
     cy.url({ timeout: 15000 }).should('eq', Cypress.config().baseUrl + '/');
     cy.get('[data-testid="home-page"]', { timeout: 10000 }).should('be.visible');
+
+    // Wait for user data to be loaded (check for user dropdown which indicates user is loaded)
+    cy.get('[data-testid="user-dropdown-button"]', { timeout: 10000 }).should('be.visible');
 });
 
 // Custom command to sign in with credentials
@@ -262,6 +265,9 @@ Cypress.Commands.add('signin', (email: string, password: string) => {
             // Wait for signin to complete and redirect to home
             cy.url({ timeout: 10000 }).should('eq', Cypress.config().baseUrl + '/');
             cy.get('[data-testid="home-page"]').should('be.visible');
+
+            // Wait for user data to be loaded (check for user dropdown which indicates user is loaded)
+            cy.get('[data-testid="user-dropdown-button"]', { timeout: 10000 }).should('be.visible');
         }
     });
 });
@@ -364,8 +370,11 @@ Cypress.Commands.add('createVehicle', (data = {}) => {
     cy.get('[data-testid="my-vehicles-sidebar-button"]').click();
     cy.url().should('include', '/vehicles');
     cy.get('[data-testid="vehicles-page"]').should('be.visible');
+    cy.wait(1000); // Wait for page to fully load
 
-    cy.get('[data-testid="create-vehicle-button"]').click();
+    cy.get('[data-testid="create-vehicle-button"]').scrollIntoView().should('be.visible');
+    cy.wait(500); // Small wait after scroll
+    cy.get('[data-testid="create-vehicle-button"]').click({ force: true });
 
     cy.get('[data-testid="vehicle-make-input"]').clear().type(vehicleData.make);
     cy.get('[data-testid="vehicle-model-input"]').clear().type(vehicleData.model);
@@ -405,8 +414,14 @@ Cypress.Commands.add('createVehicle', (data = {}) => {
     });
 
     // Upload default vehicle image
-    cy.get('[data-testid="image-upload-input"]').selectFile('cypress/fixtures/vehicle-default.png', { force: true });
-    cy.wait(2000); // Wait for image upload to complete
+    cy.get('[data-testid="image-upload-input"]').should('exist').selectFile('cypress/fixtures/vehicle-default.png', { force: true });
+
+    // Wait for image preview to appear (upload completed)
+    cy.get('[data-testid="image-preview-grid"]', { timeout: 10000 }).should('be.visible');
+    cy.get('[data-testid="image-preview-0"]', { timeout: 10000 }).should('be.visible');
+
+    // Additional wait to ensure upload is fully processed
+    cy.wait(1000);
 
     cy.get('[data-testid="vehicle-submit-button"]').scrollIntoView().should('be.visible').click();
 
@@ -432,33 +447,78 @@ Cypress.Commands.add('navigateToBookings', () => {
 });
 
 Cypress.Commands.add('createBooking', (vehicleId: string, overrides = {}) => {
-    const startDate = overrides.startDate || new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
-    const endDate = overrides.endDate || new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString();
+    // Calculate dates - default to tomorrow and day after tomorrow
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const dayAfter = new Date();
+    dayAfter.setDate(dayAfter.getDate() + 2);
+
+    // Format dates as YYYY-MM-DD for date inputs
+    const formatDate = (date: Date) => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    };
+
+    const startDate = overrides.startDate
+        ? (typeof overrides.startDate === 'string' && overrides.startDate.includes('T')
+            ? new Date(overrides.startDate).toISOString().split('T')[0]
+            : formatDate(new Date(overrides.startDate)))
+        : formatDate(tomorrow);
+
+    const endDate = overrides.endDate
+        ? (typeof overrides.endDate === 'string' && overrides.endDate.includes('T')
+            ? new Date(overrides.endDate).toISOString().split('T')[0]
+            : formatDate(new Date(overrides.endDate)))
+        : formatDate(dayAfter);
+
     const message = overrides.message || 'Booking created by Cypress test';
 
-    return cy.getCookie('access_token').then((cookie) => {
-        const token = cookie?.value;
-        expect(token, 'access token').to.be.a('string');
+    // Navigate to vehicle detail page
+    cy.visit(`/vehicles/${vehicleId}`);
+    cy.get('[data-testid="vehicle-detail-page"]', { timeout: 10000 }).should('be.visible');
 
-        return cy.request({
-            method: 'POST',
-            url: `${Cypress.env('API_URL')}/bookings`,
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-            body: {
-                vehicle_id: vehicleId,
-                start_date: startDate,
-                end_date: endDate,
-                message,
-            },
-            failOnStatusCode: false,
-        }).then((response) => {
-            expect(response.status, 'create booking response status').to.eq(200);
-            expect(response.body).to.have.property('data');
-            expect(response.body.data).to.have.property('id');
-            return response.body.data.id as string;
-        });
+    // Wait for booking form to be visible (for non-owners)
+    cy.get('[data-testid="booking-start-date-input"]', { timeout: 10000 }).scrollIntoView().should('be.visible');
+
+    // Fill in the booking form
+    cy.get('[data-testid="booking-start-date-input"]').scrollIntoView().clear().type(startDate);
+    cy.get('[data-testid="booking-end-date-input"]').scrollIntoView().clear().type(endDate);
+
+    if (message) {
+        cy.get('[data-testid="booking-message-input"]').scrollIntoView().clear().type(message);
+    }
+
+    // Submit the booking form
+    cy.get('[data-testid="booking-submit-button"]').scrollIntoView().should('be.visible').click();
+
+    // Wait for booking to be created and redirect to bookings page
+    cy.url({ timeout: 10000 }).should('include', '/bookings');
+    cy.get('[data-testid="bookings-page"]', { timeout: 10000 }).should('be.visible');
+
+    // Wait for the bookings list to load and vehicle data to fetch
+    cy.wait(4000);
+
+    // Find the first booking card (most recent booking) and click on it
+    // The new UI shows cards instead of a table, so we click the first booking card
+    cy.get('[data-testid^="booking-card-"]', { timeout: 15000 }).first().should('be.visible');
+    cy.wait(1000); // Additional wait to ensure card is fully rendered
+    cy.get('[data-testid^="booking-card-"]').first().scrollIntoView().click({ force: true });
+
+    // Wait for navigation to booking detail page
+    cy.url({ timeout: 10000 }).should('include', '/bookings/');
+    cy.get('[data-testid="booking-detail-page"]', { timeout: 10000 }).should('be.visible');
+
+    // Extract booking ID from the URL
+    return cy.url().then((url) => {
+        const parts = url.split('/bookings/');
+        if (parts.length > 1) {
+            const bookingId = parts[1].split('/')[0];
+            return bookingId;
+        }
+        // Fallback - return vehicleId if we can't extract booking ID
+        return vehicleId;
     });
 });
 

@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useBookings } from '@/hooks/useBookings';
-import { useVehicles } from '@/hooks/useVehicles';
 import { CreateBookingData } from '@/types/booking';
 import { Vehicle } from '@/types/vehicle';
 import Button from '@/components/ui/button/Button';
@@ -14,14 +13,14 @@ import { formatCurrency } from '@/utils/currency';
 
 interface BookingFormProps {
   vehicleId: string;
+  vehicle?: Vehicle | null;
   onSuccess?: () => void;
   onCancel?: () => void;
 }
 
-export default function BookingForm({ vehicleId, onSuccess, onCancel }: BookingFormProps) {
+export default function BookingForm({ vehicleId, vehicle, onSuccess, onCancel }: BookingFormProps) {
   const router = useRouter();
   const { addBooking, isLoading, error, clearBookingError } = useBookings();
-  const { getVehicleById, currentVehicle } = useVehicles();
   const { currency } = useCurrency();
   
   const [formData, setFormData] = useState<CreateBookingData>({
@@ -35,10 +34,9 @@ export default function BookingForm({ vehicleId, onSuccess, onCancel }: BookingF
 
   useEffect(() => {
     if (vehicleId) {
-      getVehicleById(vehicleId);
       setFormData(prev => ({ ...prev, vehicle_id: vehicleId }));
     }
-  }, [vehicleId, getVehicleById]);
+  }, [vehicleId]);
 
   // Clear errors when component mounts
   useEffect(() => {
@@ -99,9 +97,9 @@ export default function BookingForm({ vehicleId, onSuccess, onCancel }: BookingF
   };
 
   const calculateTotalPrice = (): number => {
-    if (!currentVehicle) return 0;
+    if (!vehicle) return 0;
     const days = calculateTotalDays();
-    return days * currentVehicle.price_per_day;
+    return days * vehicle.price_per_day;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -141,13 +139,13 @@ export default function BookingForm({ vehicleId, onSuccess, onCancel }: BookingF
         </p>
       </div>
 
-      {currentVehicle && (
+      {vehicle && (
         <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
           <h2 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-            {currentVehicle.make} {currentVehicle.model} ({currentVehicle.year})
+            {vehicle.make} {vehicle.model} ({vehicle.year})
           </h2>
           <p className="text-sm text-gray-600 dark:text-gray-400">
-            Price per day: {formatCurrency(currentVehicle.price_per_day, currency)}
+            Price per day: {formatCurrency(vehicle.price_per_day, currency)}
           </p>
         </div>
       )}
@@ -201,7 +199,7 @@ export default function BookingForm({ vehicleId, onSuccess, onCancel }: BookingF
             </div>
           </div>
 
-          {formData.start_date && formData.end_date && currentVehicle && (
+          {formData.start_date && formData.end_date && vehicle && (
             <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
