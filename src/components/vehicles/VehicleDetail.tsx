@@ -32,7 +32,6 @@ export default function VehicleDetail({ vehicleId }: VehicleDetailProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
-  const [selectedImageIndex, setSelectedImageIndex] = useState<number>(0);
   const [bookingSuccess, setBookingSuccess] = useState(false);
 
   useEffect(() => {
@@ -149,52 +148,31 @@ export default function VehicleDetail({ vehicleId }: VehicleDetailProps) {
                 Back to search
               </button>
 
-              {/* Main Image and Thumbnails */}
-              <div className="flex gap-4">
-                {/* Thumbnails (Vertical) */}
-                {vehicle.image_urls && vehicle.image_urls.length > 1 && (
-                  <div className="flex flex-col gap-2" data-testid="vehicle-thumbnail-strip">
-                    {vehicle.image_urls.map((url, index) => (
-                      <button
-                        key={index}
-                        onClick={() => setSelectedImageIndex(index)}
-                        className={`flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all ${
-                          selectedImageIndex === index
-                            ? 'border-gray-900 dark:border-white'
-                            : 'border-gray-200 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-500'
-                        }`}
-                        data-testid={`vehicle-thumbnail-${index}`}
-                      >
+              {/* Horizontal Gallery */}
+              {vehicle.image_urls && vehicle.image_urls.length > 0 ? (
+                <div className="flex gap-4 overflow-x-auto pb-4 snap-x" data-testid="vehicle-image-gallery">
+                  {vehicle.image_urls.map((url, index) => (
+                    <div
+                      key={index}
+                      className="flex-shrink-0 w-[85vw] md:w-[640px] snap-start"
+                    >
+                      <div className="aspect-[16/9] w-full bg-gray-200 dark:bg-gray-800 rounded-2xl overflow-hidden">
                         <img
                           src={url}
-                          alt={`Thumbnail ${index + 1}`}
+                          alt={`${vehicle.make} ${vehicle.model} ${index + 1}`}
                           className="w-full h-full object-cover"
                         />
-                      </button>
-                    ))}
-                  </div>
-                )}
-
-                {/* Main Image */}
-                <div className="flex-1">
-                  {vehicle.image_urls && vehicle.image_urls.length > 0 ? (
-                    <div className="aspect-[3/1] w-full bg-gray-200 dark:bg-gray-800 rounded-2xl overflow-hidden">
-                      <img
-                        src={vehicle.image_urls[selectedImageIndex]}
-                        alt={`${vehicle.make} ${vehicle.model}`}
-                        className="w-full h-full object-cover"
-                        data-testid="vehicle-main-image"
-                      />
+                      </div>
                     </div>
-                  ) : (
-                    <div className="aspect-[3/1] w-full bg-gray-200 dark:bg-gray-800 rounded-2xl flex items-center justify-center">
-                      <svg className="w-24 h-24 text-gray-400 dark:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                      </svg>
-                    </div>
-                  )}
+                  ))}
                 </div>
-              </div>
+              ) : (
+                <div className="aspect-[3/1] w-full bg-gray-200 dark:bg-gray-800 rounded-2xl flex items-center justify-center">
+                  <svg className="w-24 h-24 text-gray-400 dark:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                </div>
+              )}
             </div>
           </div>
 
