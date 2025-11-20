@@ -9,6 +9,7 @@ import Button from '@/components/ui/button/Button';
 import Input from '@/components/form/input/InputField';
 import Label from '@/components/form/Label';
 import { Vehicle, BrowseVehiclesFilters } from '@/types/vehicle';
+import Loader from '@/components/ui/Loader';
 
 export default function HomePage() {
   const router = useRouter();
@@ -225,11 +226,9 @@ export default function HomePage() {
             </p>
           </div>
 
-          {isLoading ? (
-            <div className="text-center py-8">
-              <p className="text-sm text-gray-600 dark:text-gray-400">Loading vehicles...</p>
-            </div>
-          ) : browseResults.length === 0 ? (
+              {isLoading ? (
+                <Loader message="Loading vehicles..." />
+              ) : browseResults.length === 0 ? (
             <div className="text-center py-8 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700">
               <h3 className="text-base font-medium text-gray-600 dark:text-gray-400">No vehicles found</h3>
               <p className="text-sm text-gray-500 dark:text-gray-500 mt-1">

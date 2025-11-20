@@ -8,6 +8,7 @@ import { Vehicle } from '@/types/vehicle';
 import VehicleForm from '@/components/vehicles/VehicleForm';
 import BookingForm from '@/components/bookings/BookingForm';
 import Button from '@/components/ui/button/Button';
+import Loader from '@/components/ui/Loader';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { formatCurrency } from '@/utils/currency';
 
@@ -108,11 +109,7 @@ export default function VehicleDetail({ vehicleId }: VehicleDetailProps) {
   };
 
   if (isLoading && !vehicle) {
-    return (
-      <div className="p-6" data-testid="vehicle-detail-loading">
-        <p className="text-sm text-gray-600 dark:text-gray-400">Loading vehicle...</p>
-      </div>
-    );
+    return <Loader message="Loading vehicle..." fullscreen data-testid="vehicle-detail-loading" />;
   }
 
   if (!vehicle) {

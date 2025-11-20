@@ -7,6 +7,7 @@ import { VehicleService } from '@/services/vehicleService';
 import { Booking } from '@/types/booking';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { formatCurrency } from '@/utils/currency';
+import Loader from '@/components/ui/Loader';
 
 interface BookingListProps {
   showPendingRequests?: boolean;
@@ -113,9 +114,7 @@ export default function BookingList({ showPendingRequests = false }: BookingList
             {showPendingRequests ? 'Pending Booking Requests' : 'My Bookings'}
           </h1>
         </div>
-        <div className="text-center py-12">
-          <p className="text-sm text-gray-600 dark:text-gray-400">Loading bookings...</p>
-        </div>
+        <Loader message="Loading bookings..." />
       </div>
     );
   }

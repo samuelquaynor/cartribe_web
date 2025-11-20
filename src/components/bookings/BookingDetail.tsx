@@ -7,6 +7,7 @@ import { VehicleService } from '@/services/vehicleService';
 import { Booking, UpdateBookingStatusData } from '@/types/booking';
 import { Vehicle } from '@/types/vehicle';
 import Button from '@/components/ui/button/Button';
+import Loader from '@/components/ui/Loader';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { formatCurrency } from '@/utils/currency';
 
@@ -114,11 +115,7 @@ export default function BookingDetail({ bookingId }: BookingDetailProps) {
   }, [booking]);
 
   if (isLoading && !booking) {
-    return (
-      <div className="p-6" data-testid="booking-detail-loading">
-        <p className="text-sm text-gray-600 dark:text-gray-400">Loading booking...</p>
-      </div>
-    );
+    return <Loader message="Loading booking..." fullscreen data-testid="booking-detail-loading" />;
   }
 
   if (!booking) {
@@ -175,7 +172,11 @@ export default function BookingDetail({ bookingId }: BookingDetailProps) {
         {/* Main Content */}
         <div className="lg:col-span-2 space-y-6">
           {/* Vehicle Info Card */}
-          {vehicle && (
+          {loadingVehicle && !vehicle && (
+            <Loader message="Loading vehicle information..." className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg" />
+          )}
+
+          {vehicle && !loadingVehicle && (
             <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
               {vehicle.image_urls && vehicle.image_urls.length > 0 && (
                 <div className="aspect-[21/9] bg-gray-200 dark:bg-gray-700 overflow-hidden">
