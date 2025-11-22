@@ -32,11 +32,13 @@ export default function VehicleDetail({ vehicleId }: VehicleDetailProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [selectedImageIndex, setSelectedImageIndex] = useState<number>(0);
   const [bookingSuccess, setBookingSuccess] = useState(false);
 
   useEffect(() => {
     if (vehicleId) {
       getVehicleById(vehicleId);
+      setSelectedImageIndex(0); // Reset to first image when vehicle changes
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [vehicleId]);
@@ -51,6 +53,14 @@ export default function VehicleDetail({ vehicleId }: VehicleDetailProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
+  const vehicle: Vehicle | null = useMemo(() => {
+    if (currentVehicle && currentVehicle.id === vehicleId) {
+      return currentVehicle;
+    }
+    return null;
+  }, [currentVehicle, vehicleId]);
+
+
   useEffect(() => {
     return () => {
       clearError();
@@ -58,13 +68,6 @@ export default function VehicleDetail({ vehicleId }: VehicleDetailProps) {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  const vehicle: Vehicle | null = useMemo(() => {
-    if (currentVehicle && currentVehicle.id === vehicleId) {
-      return currentVehicle;
-    }
-    return null;
-  }, [currentVehicle, vehicleId]);
 
   const isOwner = useMemo(() => {
     // Only check ownership if we have both vehicle and user data, and auth is not loading
@@ -125,7 +128,7 @@ export default function VehicleDetail({ vehicleId }: VehicleDetailProps) {
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900" data-testid="vehicle-detail-page">
       {(error || deleteError) && (
-        <div className="max-w-7xl mx-auto py-4">
+        <div className="py-4">
           <div className="p-4 bg-red-50 border border-red-200 rounded-lg dark:bg-red-900/20 dark:border-red-800">
             <p className="text-sm text-red-600 dark:text-red-400">{deleteError || error}</p>
           </div>
@@ -134,59 +137,69 @@ export default function VehicleDetail({ vehicleId }: VehicleDetailProps) {
 
       {!isEditing ? (
         <>
-          {/* Hero Image Section */}
-          <div className="relative">
-            <div className="max-w-7xl mx-auto py-6">
-              {/* Back Button */}
-              <button
-                onClick={() => router.push('/')}
-                className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mb-4"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                </svg>
-                Back to search
-              </button>
+          {/* Main Layout - Image, Content, and Booking */}
+          <div className="py-3">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Left Column - Image and Content */}
+              <div className="lg:col-span-2 space-y-3">
+                {/* Back Button */}
+                <button
+                  onClick={() => router.push('/')}
+                  className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mb-2"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                  Back to search
+                </button>
 
-              {/* Horizontal Gallery */}
-              {vehicle.image_urls && vehicle.image_urls.length > 0 ? (
-                <div className="flex gap-4 overflow-x-auto pb-4 snap-x" data-testid="vehicle-image-gallery">
-                  {vehicle.image_urls.map((url, index) => (
-                    <div
-                      key={index}
-                      className="flex-shrink-0 w-[85vw] md:w-[640px] snap-start"
-                    >
-                      <div className="aspect-[16/9] w-full bg-gray-200 dark:bg-gray-800 rounded-2xl overflow-hidden">
+                {/* Main Image */}
+                {vehicle.image_urls && vehicle.image_urls.length > 0 ? (
+                  <div className="aspect-[21/9] w-full bg-gray-200 dark:bg-gray-800 rounded-2xl overflow-hidden">
+                    <img
+                      src={vehicle.image_urls[selectedImageIndex]}
+                      alt={`${vehicle.make} ${vehicle.model}`}
+                      className="w-full h-full object-cover"
+                      data-testid="vehicle-main-image"
+                    />
+                  </div>
+                ) : (
+                  <div className="aspect-[21/9] w-full bg-gray-200 dark:bg-gray-800 rounded-2xl flex items-center justify-center">
+                    <svg className="w-24 h-24 text-gray-400 dark:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                  </div>
+                )}
+
+                {/* Thumbnail Strip */}
+                {vehicle.image_urls && vehicle.image_urls.length > 1 && (
+                  <div className="flex gap-2 mt-4 overflow-x-auto pb-2" data-testid="vehicle-thumbnail-strip">
+                    {vehicle.image_urls.map((url, index) => (
+                      <button
+                        key={index}
+                        onClick={() => setSelectedImageIndex(index)}
+                        className={`flex-shrink-0 w-24 h-16 rounded-lg overflow-hidden border-2 transition-all ${
+                          selectedImageIndex === index
+                            ? 'border-gray-900 dark:border-white'
+                            : 'border-gray-200 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-500'
+                        }`}
+                        data-testid={`vehicle-thumbnail-${index}`}
+                      >
                         <img
                           src={url}
-                          alt={`${vehicle.make} ${vehicle.model} ${index + 1}`}
+                          alt={`Thumbnail ${index + 1}`}
                           className="w-full h-full object-cover"
                         />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="aspect-[3/1] w-full bg-gray-200 dark:bg-gray-800 rounded-2xl flex items-center justify-center">
-                  <svg className="w-24 h-24 text-gray-400 dark:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Content Section */}
-          <div className="max-w-7xl mx-auto py-8">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              {/* Left Column - Main Content */}
-              <div className="lg:col-span-2 space-y-8">
+                      </button>
+                    ))}
+                  </div>
+                )}
                 {/* Title and Stats */}
                 <div>
-                  <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-2">
+                  <h1 className="text-xl font-semibold text-gray-900 dark:text-white">
                     {vehicle.year} {vehicle.make} {vehicle.model}
                   </h1>
-                  <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
+                  <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400 mb-2">
                     {vehicle.total_bookings > 0 && (
                       <div className="flex items-center gap-1">
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -204,21 +217,41 @@ export default function VehicleDetail({ vehicleId }: VehicleDetailProps) {
                       </div>
                     )}
                   </div>
+                  
+                  {/* Phase 1: Instant Booking & Delivery Badges */}
+                  <div className="flex flex-wrap gap-2">
+                    {vehicle.instant_booking && (
+                      <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400">
+                        <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                        </svg>
+                        Instant Book
+                      </span>
+                    )}
+                    {vehicle.delivery_available && (
+                      <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400">
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        Delivery Available
+                      </span>
+                    )}
+                  </div>
                 </div>
 
                 {/* Description */}
                 {vehicle.description && (
                   <div>
-                    <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">Description</h2>
+                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Description</h2>
                     <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
                       {vehicle.description}
                     </p>
                   </div>
                 )}
 
-                {/* Features */}
+                {/* Vehicle Specifications */}
                 <div>
-                  <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Features</h2>
+                  <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Vehicle Specifications</h2>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                     <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
                       <svg className="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -250,11 +283,111 @@ export default function VehicleDetail({ vehicleId }: VehicleDetailProps) {
                   </div>
                 </div>
 
+                {/* Phase 1: Features/Amenities */}
+                {vehicle.features && vehicle.features.length > 0 && (
+                  <div>
+                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Features & Amenities</h2>
+                    <div className="flex flex-wrap gap-2">
+                      {vehicle.features.map((feature, index) => (
+                        <span
+                          key={index}
+                          className="inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200"
+                        >
+                          {feature}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Phase 1: Pickup/Return Times */}
+                {(vehicle.pickup_time_start || vehicle.return_time_start || vehicle.flexible_pickup_return) && (
+                  <div>
+                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Pickup & Return Times</h2>
+                    <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg space-y-2">
+                      {vehicle.flexible_pickup_return ? (
+                        <div className="flex items-center gap-2">
+                          <svg className="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          <span className="text-sm text-gray-600 dark:text-gray-400">Flexible pickup and return times available</span>
+                        </div>
+                      ) : (
+                        <>
+                          {vehicle.pickup_time_start && vehicle.pickup_time_end && (
+                            <div className="flex items-center gap-3">
+                              <svg className="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                              </svg>
+                              <div>
+                                <p className="text-xs text-gray-500 dark:text-gray-400">Pickup Time</p>
+                                <p className="text-sm font-medium text-gray-900 dark:text-white">
+                                  {vehicle.pickup_time_start.substring(0, 5)} - {vehicle.pickup_time_end.substring(0, 5)}
+                                </p>
+                              </div>
+                            </div>
+                          )}
+                          {vehicle.return_time_start && vehicle.return_time_end && (
+                            <div className="flex items-center gap-3">
+                              <svg className="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                              </svg>
+                              <div>
+                                <p className="text-xs text-gray-500 dark:text-gray-400">Return Time</p>
+                                <p className="text-sm font-medium text-gray-900 dark:text-white">
+                                  {vehicle.return_time_start.substring(0, 5)} - {vehicle.return_time_end.substring(0, 5)}
+                                </p>
+                              </div>
+                            </div>
+                          )}
+                        </>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Phase 1: Delivery Options */}
+                {vehicle.delivery_available && (
+                  <div>
+                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Delivery Options</h2>
+                    <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg space-y-2">
+                      <div className="flex items-center gap-2">
+                        <svg className="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                        </svg>
+                        <span className="text-sm font-medium text-gray-900 dark:text-white">Vehicle delivery available</span>
+                      </div>
+                      {vehicle.delivery_fee_per_km && (
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-600 dark:text-gray-400">Delivery fee</span>
+                          <span className="text-gray-900 dark:text-white font-medium">
+                            {formatCurrency(vehicle.delivery_fee_per_km, currency)} per km
+                          </span>
+                        </div>
+                      )}
+                      {vehicle.delivery_radius_km && (
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-600 dark:text-gray-400">Maximum delivery distance</span>
+                          <span className="text-gray-900 dark:text-white font-medium">{vehicle.delivery_radius_km} km</span>
+                        </div>
+                      )}
+                      {vehicle.pickup_location_type && (
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-600 dark:text-gray-400">Pickup location type</span>
+                          <span className="text-gray-900 dark:text-white font-medium capitalize">
+                            {vehicle.pickup_location_type.replace('_', ' ')}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
                 {/* Location */}
                 {vehicle.location_address && (
                   <div>
-                    <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">Location</h2>
-                    <div className="flex items-start gap-3 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Location</h2>
+                    <div className="flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
                       <svg className="w-5 h-5 text-gray-600 dark:text-gray-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -265,43 +398,107 @@ export default function VehicleDetail({ vehicleId }: VehicleDetailProps) {
                 )}
 
                 {/* Additional Details */}
-                <div>
-                  <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">Additional Details</h2>
-                  <div className="space-y-2 text-sm">
-                    {vehicle.color && (
+                {vehicle.color && (
+                  <div>
+                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Additional Details</h2>
+                    <div className="space-y-2 text-sm">
                       <div className="flex justify-between py-2 border-b border-gray-200 dark:border-gray-700">
                         <span className="text-gray-600 dark:text-gray-400">Color</span>
                         <span className="text-gray-900 dark:text-white capitalize">{vehicle.color}</span>
                       </div>
-                    )}
-                    {vehicle.vin && (
-                      <div className="flex justify-between py-2 border-b border-gray-200 dark:border-gray-700">
-                        <span className="text-gray-600 dark:text-gray-400">VIN</span>
-                        <span className="text-gray-900 dark:text-white font-mono text-xs">{vehicle.vin}</span>
-                      </div>
-                    )}
-                    {vehicle.license_plate && (
-                      <div className="flex justify-between py-2 border-b border-gray-200 dark:border-gray-700">
-                        <span className="text-gray-600 dark:text-gray-400">License Plate</span>
-                        <span className="text-gray-900 dark:text-white">{vehicle.license_plate}</span>
-                      </div>
-                    )}
+                    </div>
                   </div>
-                </div>
+                )}
+
+                {/* Owner Details */}
+                {vehicle.owner && (
+                  <div>
+                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Hosted by</h2>
+                    <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                        {/* Avatar */}
+                        <div className="flex-shrink-0">
+                          {vehicle.owner.avatar ? (
+                            <img
+                              src={vehicle.owner.avatar}
+                              alt={vehicle.owner.first_name || 'Owner'}
+                              className="w-16 h-16 rounded-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-16 h-16 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center">
+                              <span className="text-xl font-semibold text-gray-600 dark:text-gray-300">
+                                {vehicle.owner.first_name?.[0]?.toUpperCase() || vehicle.owner.email?.[0]?.toUpperCase() || 'O'}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                        {/* Owner Info */}
+                        <div className="flex-1 min-w-0">
+                          <h3 className="text-lg font-semibold text-gray-900 dark:text-white break-words">
+                            {vehicle.owner.first_name && vehicle.owner.last_name
+                              ? `${vehicle.owner.first_name} ${vehicle.owner.last_name}`
+                              : vehicle.owner.first_name|| 'Owner'}
+                          </h3>
+                          {vehicle.owner.email && (
+                            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 break-words">{vehicle.owner.email}</p>
+                          )}
+                          {vehicle.owner.phone && (
+                            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 break-words">{vehicle.owner.phone}</p>
+                          )}
+                          {vehicle.owner.created_at && (
+                            <p className="text-xs text-gray-500 dark:text-gray-500 mt-2">
+                              Member since {new Date(vehicle.owner.created_at).getFullYear()}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Right Column - Booking Card or Owner Actions */}
               <div className="lg:col-span-1">
-                <div className="sticky top-6">
-                  <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl p-6 shadow-lg">
+                <div className="sticky top-24">
+                  <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl p-4 shadow-lg">
                     {/* Price */}
                     <div className="mb-6">
                       <div className="flex items-baseline gap-2">
-                        <span className="text-3xl font-bold text-gray-900 dark:text-white">
+                        <span className="text-lg font-semibold text-gray-900 dark:text-white">
                           {formatCurrency(vehicle.price_per_day, currency)}
                         </span>
-                        <span className="text-gray-600 dark:text-gray-400">/day</span>
+                        <span className="text-sm text-gray-600 dark:text-gray-400">/day</span>
                       </div>
+                      
+                      {/* Phase 1: Pricing Details */}
+                      {(vehicle.weekly_discount_percent || vehicle.monthly_discount_percent || vehicle.cleaning_fee) && (
+                        <div className="mt-3 space-y-2 text-sm">
+                          {vehicle.weekly_discount_percent && vehicle.weekly_discount_percent > 0 && (
+                            <div className="flex items-center gap-2 text-green-600 dark:text-green-400">
+                              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                              </svg>
+                              <span>{vehicle.weekly_discount_percent}% off for 7+ day rentals</span>
+                            </div>
+                          )}
+                          {vehicle.monthly_discount_percent && vehicle.monthly_discount_percent > 0 && (
+                            <div className="flex items-center gap-2 text-green-600 dark:text-green-400">
+                              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                              </svg>
+                              <span>{vehicle.monthly_discount_percent}% off for 30+ day rentals</span>
+                            </div>
+                          )}
+                          {vehicle.cleaning_fee && vehicle.cleaning_fee > 0 && (
+                            <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                              </svg>
+                              <span>Cleaning fee: {formatCurrency(vehicle.cleaning_fee, currency)}</span>
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
 
                     {/* Status Badge */}

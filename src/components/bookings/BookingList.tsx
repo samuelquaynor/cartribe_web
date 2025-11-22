@@ -247,7 +247,7 @@ export default function BookingList({ showPendingRequests = false }: BookingList
                       {/* Price */}
                       <div className="md:text-right">
                         <div className="mb-1">
-                          <span className="text-2xl font-bold text-gray-900 dark:text-white">
+                          <span className="text-lg font-semibold text-gray-900 dark:text-white">
                             {formatCurrency(booking.total_price, currency)}
                           </span>
                         </div>

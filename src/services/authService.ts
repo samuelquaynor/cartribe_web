@@ -136,6 +136,20 @@ export class AuthService {
     }
 
     /**
+     * Get user by ID
+     */
+    static async getUserById(userId: string): Promise<User> {
+        const response = await api.get<any>(`/users/${userId}`);
+        
+        // Handle API response structure
+        const data = response.data;
+        if (data.data) {
+            return data.data;
+        }
+        return data;
+    }
+
+    /**
      * Update user profile
      */
     static async updateProfile(userData: UpdateUserRequest): Promise<User> {

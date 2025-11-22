@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { VehicleState, Vehicle, CreateVehicleData, UpdateVehicleData, BrowseVehiclesFilters } from '@/types/vehicle';
 import { VehicleService } from '@/services/vehicleService';
+import { AuthService } from '@/services/authService';
 
 const initialState: VehicleState = {
     vehicles: [],
@@ -28,8 +29,20 @@ export const fetchVehicleById = createAsyncThunk(
     'vehicles/fetchVehicleById',
     async (id: string, { rejectWithValue }) => {
         try {
-            const response = await VehicleService.getVehicleById(id);
-            return response;
+            const vehicle = await VehicleService.getVehicleById(id);
+
+            // Fetch owner details if owner_id exists
+            if (vehicle.owner_id) {
+                try {
+                    const owner = await AuthService.getUserById(vehicle.owner_id);
+                    return { ...vehicle, owner };
+                } catch (ownerError) {
+                    // Silently fail - owner data is optional
+                    return vehicle;
+                }
+            }
+
+            return vehicle;
         } catch (error: any) {
             return rejectWithValue(error.error || error.message || 'Failed to fetch vehicle details');
         }

@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 
 export default function CreateVehiclePage() {
   return (
-    <div className="p-3" data-testid="create-vehicle-page">
+    <div className="p-0 md:p-6" data-testid="create-vehicle-page">
       <VehicleForm />
     </div>
   );

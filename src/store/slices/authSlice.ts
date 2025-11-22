@@ -107,6 +107,18 @@ export const getCurrentUser = createAsyncThunk(
     }
 );
 
+export const getUserById = createAsyncThunk(
+    'auth/getUserById',
+    async (userId: string, { rejectWithValue }) => {
+        try {
+            const user = await AuthService.getUserById(userId);
+            return user;
+        } catch (error: any) {
+            return rejectWithValue(error.error || error.message || 'Failed to fetch user');
+        }
+    }
+);
+
 export const updateProfile = createAsyncThunk(
     'auth/updateProfile',
     async (userData: Partial<User>, { rejectWithValue }) => {
@@ -266,6 +278,18 @@ const authSlice = createSlice({
                 state.isLoading = false;
                 state.error = action.payload as string;
                 // Don't clear auth state on user fetch failure
+            });
+
+        // Get user by ID (for fetching other users, doesn't update current user)
+        builder
+            .addCase(getUserById.pending, (state) => {
+                // Don't set loading state as this doesn't affect current user
+            })
+            .addCase(getUserById.fulfilled, (state) => {
+                // Don't update state - this is for fetching other users
+            })
+            .addCase(getUserById.rejected, (state) => {
+                // Silently fail - fetching other users shouldn't affect auth state
             });
 
         // Update profile

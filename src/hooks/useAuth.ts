@@ -5,6 +5,7 @@ import {
     registerUser,
     logoutUser,
     getCurrentUser,
+    getUserById,
     updateProfile,
     clearError
 } from '@/store/slices/authSlice';
@@ -43,6 +44,10 @@ export const useAuth = () => {
 
     const fetchCurrentUser = useCallback(async () => {
         return dispatch(getCurrentUser());
+    }, [dispatch]);
+
+    const fetchUserById = useCallback(async (userId: string) => {
+        return dispatch(getUserById(userId)).unwrap();
     }, [dispatch]);
 
     const updateUserProfile = useCallback(async (userData: Partial<User>) => {
@@ -92,6 +97,7 @@ export const useAuth = () => {
         register,
         logout,
         fetchCurrentUser,
+        fetchUserById,
         updateUserProfile,
         clearAuthError,
 

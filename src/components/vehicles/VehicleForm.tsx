@@ -37,6 +37,34 @@ const availabilityStatusOptions = [
   { value: 'inactive', label: 'Inactive' },
 ];
 
+// Phase 1: Vehicle features/amenities options
+const vehicleFeatures = [
+  'GPS/Navigation',
+  'Bluetooth',
+  'USB ports',
+  'Apple CarPlay',
+  'Android Auto',
+  'Sunroof/Moonroof',
+  'Heated seats',
+  'Backup camera',
+  'Parking sensors',
+  'All-wheel drive',
+  'Third-row seating',
+  'Child seat available',
+  'Ski/snowboard rack',
+  'Bike rack',
+  'Pet-friendly',
+  'Towing capable',
+];
+
+const pickupLocationTypeOptions = [
+  { value: 'owner_location', label: 'Owner Location' },
+  { value: 'airport', label: 'Airport' },
+  { value: 'train_station', label: 'Train Station' },
+  { value: 'hotel', label: 'Hotel' },
+  { value: 'custom', label: 'Custom Location' },
+];
+
 export default function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFormProps) {
   const router = useRouter();
   const { addVehicle, editVehicle, isLoading, error, clearVehicleError } = useVehicles();
@@ -56,10 +84,28 @@ export default function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFor
     price_per_day: 0,
     description: '',
     image_urls: [],
+    features: [],
     location_address: '',
     location_latitude: undefined,
     location_longitude: undefined,
     availability_status: 'available',
+    // Phase 1: Pricing enhancements
+    weekly_discount_percent: undefined,
+    monthly_discount_percent: undefined,
+    cleaning_fee: undefined,
+    // Phase 1: Instant booking
+    instant_booking: false,
+    // Phase 1: Pickup/Return times
+    pickup_time_start: undefined,
+    pickup_time_end: undefined,
+    return_time_start: undefined,
+    return_time_end: undefined,
+    flexible_pickup_return: false,
+    // Phase 1: Delivery options
+    delivery_available: false,
+    delivery_fee_per_km: undefined,
+    delivery_radius_km: undefined,
+    pickup_location_type: 'owner_location',
   });
 
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
@@ -80,10 +126,28 @@ export default function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFor
         price_per_day: vehicle.price_per_day,
         description: vehicle.description || '',
         image_urls: vehicle.image_urls || [],
+        features: vehicle.features || [],
         location_address: vehicle.location_address || '',
         location_latitude: vehicle.location_latitude,
         location_longitude: vehicle.location_longitude,
         availability_status: vehicle.availability_status,
+        // Phase 1: Pricing enhancements
+        weekly_discount_percent: vehicle.weekly_discount_percent,
+        monthly_discount_percent: vehicle.monthly_discount_percent,
+        cleaning_fee: vehicle.cleaning_fee,
+        // Phase 1: Instant booking
+        instant_booking: vehicle.instant_booking || false,
+        // Phase 1: Pickup/Return times
+        pickup_time_start: vehicle.pickup_time_start,
+        pickup_time_end: vehicle.pickup_time_end,
+        return_time_start: vehicle.return_time_start,
+        return_time_end: vehicle.return_time_end,
+        flexible_pickup_return: vehicle.flexible_pickup_return || false,
+        // Phase 1: Delivery options
+        delivery_available: vehicle.delivery_available || false,
+        delivery_fee_per_km: vehicle.delivery_fee_per_km,
+        delivery_radius_km: vehicle.delivery_radius_km,
+        pickup_location_type: vehicle.pickup_location_type || 'owner_location',
       });
     }
   }, [vehicle]);
@@ -105,6 +169,20 @@ export default function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFor
       ...prev,
       [field]: value,
     }));
+  };
+
+  // Handle feature toggle
+  const handleFeatureToggle = (feature: string) => {
+    setFormData(prev => {
+      const currentFeatures = prev.features || [];
+      const isSelected = currentFeatures.includes(feature);
+      return {
+        ...prev,
+        features: isSelected
+          ? currentFeatures.filter(f => f !== feature)
+          : [...currentFeatures, feature],
+      };
+    });
   };
 
   const validateForm = (): boolean => {
@@ -383,6 +461,235 @@ export default function VehicleForm({ vehicle, onSuccess, onCancel }: VehicleFor
               data-testid="vehicle-price-per-day-input"
             />
           </div>
+        </div>
+
+        {/* Phase 1: Vehicle Features/Amenities */}
+        <div className="space-y-3">
+          <h2 className="text-base font-semibold text-gray-900 dark:text-white mb-3">Features & Amenities</h2>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+            Select the features and amenities your vehicle offers
+          </p>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+            {vehicleFeatures.map((feature) => {
+              const isSelected = (formData.features || []).includes(feature);
+              return (
+                <label
+                  key={feature}
+                  className="flex items-center gap-2 p-2 border border-gray-200 dark:border-gray-700 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800"
+                >
+                  <input
+                    type="checkbox"
+                    checked={isSelected}
+                    onChange={() => handleFeatureToggle(feature)}
+                    className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600"
+                    data-testid={`vehicle-feature-${feature.toLowerCase().replace(/[^a-z0-9]/g, '-')}`}
+                  />
+                  <span className="text-sm text-gray-900 dark:text-white">{feature}</span>
+                </label>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Phase 1: Pricing Enhancements */}
+        <div className="space-y-3">
+          <h2 className="text-base font-semibold text-gray-900 dark:text-white mb-3">Pricing & Discounts</h2>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div>
+              <Label>Weekly Discount (%)</Label>
+              <Input
+                type="number"
+                // @ts-ignore
+                step={0.01}
+                min="0"
+                max="100"
+                value={formData.weekly_discount_percent?.toString() || ''}
+                onChange={(e) => handleInputChange('weekly_discount_percent', e.target.value === '' ? undefined : parseFloat(e.target.value))}
+                placeholder="0.00"
+                data-testid="vehicle-weekly-discount-input"
+              />
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Discount for 7+ day rentals</p>
+            </div>
+
+            <div>
+              <Label>Monthly Discount (%)</Label>
+              <Input
+                type="number"
+                // @ts-ignore
+                step={0.01}
+                min="0"
+                max="100"
+                value={formData.monthly_discount_percent?.toString() || ''}
+                onChange={(e) => handleInputChange('monthly_discount_percent', e.target.value === '' ? undefined : parseFloat(e.target.value))}
+                placeholder="0.00"
+                data-testid="vehicle-monthly-discount-input"
+              />
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Discount for 30+ day rentals</p>
+            </div>
+
+            <div>
+              <Label>Cleaning Fee ({currencySymbol})</Label>
+              <Input
+                type="number"
+                // @ts-ignore
+                step={0.01}
+                min="0"
+                value={formData.cleaning_fee?.toString() || ''}
+                onChange={(e) => handleInputChange('cleaning_fee', e.target.value === '' ? undefined : parseFloat(e.target.value))}
+                placeholder="0.00"
+                data-testid="vehicle-cleaning-fee-input"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Phase 1: Instant Booking */}
+        <div className="space-y-3">
+          <h2 className="text-base font-semibold text-gray-900 dark:text-white mb-3">Booking Settings</h2>
+          
+          <div className="flex items-center gap-3 p-3 border border-gray-200 dark:border-gray-700 rounded-lg">
+            <input
+              type="checkbox"
+              checked={formData.instant_booking || false}
+              onChange={(e) => handleInputChange('instant_booking', e.target.checked)}
+              className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600"
+              data-testid="vehicle-instant-booking-checkbox"
+            />
+            <div>
+              <Label className="mb-0">Enable Instant Booking</Label>
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                Bookings will be automatically accepted without requiring your approval
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Phase 1: Pickup/Return Times */}
+        <div className="space-y-3">
+          <h2 className="text-base font-semibold text-gray-900 dark:text-white mb-3">Pickup & Return Times</h2>
+          
+          <div className="flex items-center gap-3 p-3 border border-gray-200 dark:border-gray-700 rounded-lg mb-3">
+            <input
+              type="checkbox"
+              checked={formData.flexible_pickup_return || false}
+              onChange={(e) => handleInputChange('flexible_pickup_return', e.target.checked)}
+              className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600"
+              data-testid="vehicle-flexible-times-checkbox"
+            />
+            <div>
+              <Label className="mb-0">Flexible Pickup/Return Times</Label>
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                Allow renters to choose flexible pickup and return times
+              </p>
+            </div>
+          </div>
+
+          {!formData.flexible_pickup_return && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div>
+                <Label>Pickup Time Start</Label>
+                <Input
+                  type="time"
+                  value={formData.pickup_time_start || ''}
+                  onChange={(e) => handleInputChange('pickup_time_start', e.target.value || undefined)}
+                  data-testid="vehicle-pickup-time-start-input"
+                />
+              </div>
+              <div>
+                <Label>Pickup Time End</Label>
+                <Input
+                  type="time"
+                  value={formData.pickup_time_end || ''}
+                  onChange={(e) => handleInputChange('pickup_time_end', e.target.value || undefined)}
+                  data-testid="vehicle-pickup-time-end-input"
+                />
+              </div>
+              <div>
+                <Label>Return Time Start</Label>
+                <Input
+                  type="time"
+                  value={formData.return_time_start || ''}
+                  onChange={(e) => handleInputChange('return_time_start', e.target.value || undefined)}
+                  data-testid="vehicle-return-time-start-input"
+                />
+              </div>
+              <div>
+                <Label>Return Time End</Label>
+                <Input
+                  type="time"
+                  value={formData.return_time_end || ''}
+                  onChange={(e) => handleInputChange('return_time_end', e.target.value || undefined)}
+                  data-testid="vehicle-return-time-end-input"
+                />
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Phase 1: Delivery Options */}
+        <div className="space-y-3">
+          <h2 className="text-base font-semibold text-gray-900 dark:text-white mb-3">Delivery Options</h2>
+          
+          <div className="flex items-center gap-3 p-3 border border-gray-200 dark:border-gray-700 rounded-lg mb-3">
+            <input
+              type="checkbox"
+              checked={formData.delivery_available || false}
+              onChange={(e) => handleInputChange('delivery_available', e.target.checked)}
+              className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600"
+              data-testid="vehicle-delivery-available-checkbox"
+            />
+            <div>
+              <Label className="mb-0">Offer Delivery Service</Label>
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                Allow renters to request vehicle delivery
+              </p>
+            </div>
+          </div>
+
+          {formData.delivery_available && (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div>
+                <Label>Delivery Fee Per Km ({currencySymbol})</Label>
+                <Input
+                  type="number"
+                  // @ts-ignore
+                  step={0.01}
+                  min="0"
+                  value={formData.delivery_fee_per_km?.toString() || ''}
+                  onChange={(e) => handleInputChange('delivery_fee_per_km', e.target.value === '' ? undefined : parseFloat(e.target.value))}
+                  placeholder="0.00"
+                  data-testid="vehicle-delivery-fee-per-km-input"
+                />
+              </div>
+              <div>
+                <Label>Delivery Radius (km)</Label>
+                <Input
+                  type="number"
+                  min="1"
+                  value={formData.delivery_radius_km?.toString() || ''}
+                  onChange={(e) => handleInputChange('delivery_radius_km', e.target.value === '' ? undefined : parseInt(e.target.value))}
+                  placeholder="50"
+                  data-testid="vehicle-delivery-radius-input"
+                />
+              </div>
+              <div>
+                <Label>Pickup Location Type</Label>
+                <select
+                  value={formData.pickup_location_type || 'owner_location'}
+                  onChange={(e) => handleInputChange('pickup_location_type', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+                  data-testid="vehicle-pickup-location-type-select"
+                >
+                  {pickupLocationTypeOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Vehicle Photos */}
